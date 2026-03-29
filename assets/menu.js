@@ -103,7 +103,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   const initial = String(displayName).trim().charAt(0).toUpperCase() || 'U'
   const coins = Number(profile?.coins || 0)
-  const isAdmin = Boolean(profile?.is_admin)
+  const isAdmin = profile?.is_admin === true
 
   container.innerHTML = `
     <div id="overlay" class="fixed inset-0 bg-black/40 hidden z-40 md:hidden"></div>
@@ -182,19 +182,15 @@ window.addEventListener('DOMContentLoaded', async () => {
             Suporte
           </button>
 
-          ${
-            isAdmin
-              ? `
-                <button
-                  id="adminPanelBtn"
-                  type="button"
-                  class="${activeClass('painel-admin.html')} block w-full text-left px-4 py-3 rounded-2xl font-semibold"
-                >
-                  Painel ADM
-                </button>
-              `
-              : ''
-          }
+          ${isAdmin ? `
+            <button
+              id="adminPanelBtn"
+              type="button"
+              class="${activeClass('painel-admin.html')} block w-full text-left px-4 py-3 rounded-2xl font-semibold"
+            >
+              Painel ADM
+            </button>
+          ` : ''}
         </nav>
       </div>
 
@@ -223,7 +219,6 @@ window.addEventListener('DOMContentLoaded', async () => {
           Sair
         </button>
       </div>
-
     </aside>
   `
 

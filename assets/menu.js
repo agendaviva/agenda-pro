@@ -1,5 +1,3 @@
-import { supabase } from './supabase.js'
-
 const currentPage = window.location.pathname.split('/').pop()
 
 function activeClass(page) {
@@ -22,50 +20,54 @@ window.addEventListener('DOMContentLoaded', async () => {
   const container = document.getElementById('menu-container')
   if (!container) return
 
+  const supabase = window.supabase
+
   let user = null
   let profile = null
   let projects = []
   let activeProjectId = localStorage.getItem('activeProjectId')
   let activeProjectName = 'Selecionar agenda'
 
-  const { data: userData } = await supabase.auth.getUser()
-  user = userData?.user || null
+  if (supabase) {
+    const { data: userData } = await supabase.auth.getUser()
+    user = userData?.user || null
 
-  if (user) {
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('nome, email, coins')
-      .eq('id', user.id)
-      .maybeSingle()
+    if (user) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('nome, email, coins')
+        .eq('id', user.id)
+        .maybeSingle()
 
-    profile = profileData || null
+      profile = profileData || null
 
-    const { data: memberRows } = await supabase
-      .from('project_members')
-      .select(`
-        project_id,
-        role,
-        projects:project_id (
-          id,
-          name
-        )
-      `)
-      .eq('user_id', user.id)
+      const { data: memberRows } = await supabase
+        .from('project_members')
+        .select(`
+          project_id,
+          role,
+          projects:project_id (
+            id,
+            name
+          )
+        `)
+        .eq('user_id', user.id)
 
-    if (memberRows) {
-      projects = memberRows.map(row => ({
-        project_id: row.project_id,
-        role: row.role,
-        name: row.projects?.name || 'Projeto'
-      }))
+      if (memberRows) {
+        projects = memberRows.map(row => ({
+          project_id: row.project_id,
+          role: row.role,
+          name: row.projects?.name || 'Projeto'
+        }))
 
-      if (!activeProjectId && projects.length) {
-        activeProjectId = projects[0].project_id
-        localStorage.setItem('activeProjectId', activeProjectId)
+        if (!activeProjectId && projects.length) {
+          activeProjectId = projects[0].project_id
+          localStorage.setItem('activeProjectId', activeProjectId)
+        }
+
+        const active = projects.find(p => p.project_id === activeProjectId)
+        if (active) activeProjectName = active.name
       }
-
-      const active = projects.find(p => p.project_id === activeProjectId)
-      if (active) activeProjectName = active.name
     }
   }
 
@@ -221,7 +223,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   })
 
   document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-    await supabase.auth.signOut()
+    if (window.supabase) {
+      await window.supabase.auth.signOut()
+    }
     localStorage.removeItem('activeProjectId')
     window.location.href = 'login.html'
   })

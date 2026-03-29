@@ -6,146 +6,332 @@
   <title>Agenda Lux</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
 <body class="bg-gradient-to-br from-white via-green-50 to-white text-gray-900">
 
-<!-- Overlay -->
-<div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/40 hidden z-40"></div>
+  <!-- Overlay menu mobile -->
+  <div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/40 hidden z-40 md:hidden"></div>
 
-<div class="flex min-h-screen">
+  <!-- Overlay modal -->
+  <div id="modalOverlay" class="fixed inset-0 bg-black/40 hidden z-[60]"></div>
 
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed md:relative z-50 top-0 left-0 h-full w-72 bg-white border-r border-green-100 p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 shadow-lg md:shadow-none">
+  <div class="flex min-h-screen">
 
-    <div class="mb-10">
-      <h1 class="text-2xl font-bold text-green-700">Agenda Lux</h1>
-      <p class="text-sm text-gray-500 mt-1">Painel do empresário</p>
-    </div>
-
-    <nav class="space-y-3">
-      <a href="#" class="block bg-green-600 text-white font-semibold px-4 py-3 rounded-2xl">Dashboard</a>
-      <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Calendário</a>
-      <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Shows</a>
-      <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Equipe</a>
-      <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Mensagens</a>
-      <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Configurações</a>
-    </nav>
-
-  </aside>
-
-  <!-- Main -->
-  <main class="flex-1 p-6 md:p-10">
-
-    <!-- HEADER -->
-    <div class="flex items-center justify-between mb-8">
-
-      <!-- Botão mobile -->
-      <button onclick="toggleMenu()" class="md:hidden text-3xl text-green-700">
-        ☰
-      </button>
-
-      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 ml-3 md:ml-0">
-        Dashboard
-      </h2>
-
-      <button class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl font-semibold">
-        + Criar Show
-      </button>
-
-    </div>
-
-    <!-- Stats -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
-        <p class="text-gray-500 text-sm mb-2">Shows este mês</p>
-        <h3 class="text-4xl font-bold">12</h3>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed md:relative z-50 top-0 left-0 h-full w-72 bg-white border-r border-green-100 p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 shadow-lg md:shadow-none">
+      <div class="mb-10">
+        <h1 class="text-2xl font-bold text-green-700">Agenda Lux</h1>
+        <p class="text-sm text-gray-500 mt-1">Painel do empresário</p>
       </div>
 
-      <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
-        <p class="text-gray-500 text-sm mb-2">Usuários</p>
-        <h3 class="text-4xl font-bold">3</h3>
-      </div>
+      <nav class="space-y-3">
+        <a href="#" class="block bg-green-600 text-white font-semibold px-4 py-3 rounded-2xl">Dashboard</a>
+        <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Calendário</a>
+        <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Shows</a>
+        <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Equipe</a>
+        <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Mensagens</a>
+        <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Configurações</a>
+      </nav>
+    </aside>
 
-      <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
-        <p class="text-gray-500 text-sm mb-2">Mensagens</p>
-        <h3 class="text-4xl font-bold">84</h3>
-      </div>
-    </section>
+    <!-- Main -->
+    <main class="flex-1 p-6 md:p-10">
 
-    <!-- Shows -->
-    <section class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm mb-8">
-      <div class="flex justify-between mb-5">
-        <h3 class="text-2xl font-bold">Próximos Shows</h3>
-        <span class="text-green-700 text-sm">Ver todos</span>
-      </div>
-
-      <div class="space-y-4">
-
-        <div class="bg-green-50 border border-green-100 rounded-2xl p-4 flex justify-between">
-          <div>
-            <p class="font-semibold">23/04 - Almadina/BA</p>
-            <p class="text-gray-500 text-sm">Vaquejada</p>
-          </div>
-          <span class="text-green-700 font-medium">Confirmado</span>
+      <!-- HEADER -->
+      <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-3">
+          <button onclick="toggleMenu()" class="md:hidden text-3xl text-green-700 leading-none">
+            ☰
+          </button>
+          <h2 class="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h2>
         </div>
 
-        <div class="bg-white border border-yellow-100 rounded-2xl p-4 flex justify-between">
-          <div>
-            <p class="font-semibold">25/04 - Itabuna/BA</p>
-            <p class="text-gray-500 text-sm">Aniversário</p>
-          </div>
-          <span class="text-yellow-600 font-medium">Pendente</span>
-        </div>
-
-        <div class="bg-white border border-blue-100 rounded-2xl p-4 flex justify-between">
-          <div>
-            <p class="font-semibold">28/04 - Ilhéus/BA</p>
-            <p class="text-gray-500 text-sm">Festival</p>
-          </div>
-          <span class="text-blue-600 font-medium">Agendado</span>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- Equipe -->
-    <section class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
-      <div class="flex justify-between mb-5">
-        <h3 class="text-2xl font-bold">Equipe</h3>
-        <button class="bg-green-50 text-green-700 px-4 py-2 rounded-xl">
-          + Usuário
+        <button onclick="openCreateShowModal()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl font-semibold shadow-sm">
+          + Criar Show
         </button>
       </div>
 
-      <div class="grid md:grid-cols-3 gap-4">
-
-        <div class="bg-green-50 border border-green-100 rounded-2xl p-4">
-          <p class="font-semibold">Felipe</p>
-          <p class="text-gray-500 text-sm">Admin</p>
+      <!-- Stats -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
+          <p class="text-gray-500 text-sm mb-2">Shows este mês</p>
+          <h3 class="text-4xl font-bold">12</h3>
         </div>
 
-        <div class="bg-white border border-green-100 rounded-2xl p-4">
-          <p class="font-semibold">Luiz</p>
-          <p class="text-gray-500 text-sm">Produção</p>
+        <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
+          <p class="text-gray-500 text-sm mb-2">Usuários</p>
+          <h3 class="text-4xl font-bold">3</h3>
         </div>
 
-        <div class="bg-white border border-green-100 rounded-2xl p-4">
-          <p class="font-semibold">Equipe Técnica</p>
-          <p class="text-gray-500 text-sm">Operacional</p>
+        <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
+          <p class="text-gray-500 text-sm mb-2">Mensagens</p>
+          <h3 class="text-4xl font-bold">84</h3>
+        </div>
+      </section>
+
+      <!-- Calendário semanal -->
+      <section class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm mb-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+          <div>
+            <h3 class="text-2xl font-bold">Calendário Semanal</h3>
+            <p class="text-gray-500 text-sm">Clique no + do dia para adicionar um show</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="bg-green-50 text-green-700 px-4 py-2 rounded-xl text-sm font-medium">Semana atual</button>
+          </div>
         </div>
 
+        <div class="grid grid-cols-2 md:grid-cols-7 gap-4">
+          <div class="bg-green-50/70 border border-green-100 rounded-2xl p-4 min-h-[140px] flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-500 text-sm">Dom</p>
+                <h4 class="text-2xl font-bold">21</h4>
+              </div>
+              <button onclick="openCreateShowModal('2026-04-21')" class="w-8 h-8 rounded-full bg-white border border-green-200 text-green-700 font-bold hover:bg-green-100">+</button>
+            </div>
+            <p class="text-sm text-gray-400">Sem show</p>
+          </div>
+
+          <div class="bg-white border border-green-100 rounded-2xl p-4 min-h-[140px] flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-500 text-sm">Seg</p>
+                <h4 class="text-2xl font-bold">22</h4>
+              </div>
+              <button onclick="openCreateShowModal('2026-04-22')" class="w-8 h-8 rounded-full bg-white border border-green-200 text-green-700 font-bold hover:bg-green-100">+</button>
+            </div>
+            <p class="text-sm text-gray-400">Sem show</p>
+          </div>
+
+          <div class="bg-white border border-green-100 rounded-2xl p-4 min-h-[140px] flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-500 text-sm">Ter</p>
+                <h4 class="text-2xl font-bold">23</h4>
+              </div>
+              <button onclick="openCreateShowModal('2026-04-23')" class="w-8 h-8 rounded-full bg-white border border-green-200 text-green-700 font-bold hover:bg-green-100">+</button>
+            </div>
+            <div class="bg-green-50 border border-green-100 rounded-xl p-2">
+              <p class="text-sm font-semibold text-gray-900">22:00 - Almadina</p>
+              <p class="text-xs text-gray-500">Vaquejada</p>
+            </div>
+          </div>
+
+          <div class="bg-white border border-green-100 rounded-2xl p-4 min-h-[140px] flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-500 text-sm">Qua</p>
+                <h4 class="text-2xl font-bold">24</h4>
+              </div>
+              <button onclick="openCreateShowModal('2026-04-24')" class="w-8 h-8 rounded-full bg-white border border-green-200 text-green-700 font-bold hover:bg-green-100">+</button>
+            </div>
+            <p class="text-sm text-gray-400">Sem show</p>
+          </div>
+
+          <div class="bg-white border border-green-100 rounded-2xl p-4 min-h-[140px] flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-500 text-sm">Qui</p>
+                <h4 class="text-2xl font-bold">25</h4>
+              </div>
+              <button onclick="openCreateShowModal('2026-04-25')" class="w-8 h-8 rounded-full bg-white border border-green-200 text-green-700 font-bold hover:bg-green-100">+</button>
+            </div>
+            <div class="bg-yellow-50 border border-yellow-100 rounded-xl p-2">
+              <p class="text-sm font-semibold text-gray-900">20:30 - Itabuna</p>
+              <p class="text-xs text-gray-500">Aniversário</p>
+            </div>
+          </div>
+
+          <div class="bg-white border border-green-100 rounded-2xl p-4 min-h-[140px] flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-500 text-sm">Sex</p>
+                <h4 class="text-2xl font-bold">26</h4>
+              </div>
+              <button onclick="openCreateShowModal('2026-04-26')" class="w-8 h-8 rounded-full bg-white border border-green-200 text-green-700 font-bold hover:bg-green-100">+</button>
+            </div>
+            <p class="text-sm text-gray-400">Sem show</p>
+          </div>
+
+          <div class="bg-white border border-green-100 rounded-2xl p-4 min-h-[140px] flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-500 text-sm">Sáb</p>
+                <h4 class="text-2xl font-bold">27</h4>
+              </div>
+              <button onclick="openCreateShowModal('2026-04-27')" class="w-8 h-8 rounded-full bg-white border border-green-200 text-green-700 font-bold hover:bg-green-100">+</button>
+            </div>
+            <p class="text-sm text-gray-400">Sem show</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Próximos shows -->
+      <section class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm mb-8">
+        <div class="flex justify-between mb-5">
+          <h3 class="text-2xl font-bold">Próximos Shows</h3>
+          <span class="text-green-700 text-sm">Ver todos</span>
+        </div>
+
+        <div class="space-y-4">
+          <div class="bg-green-50 border border-green-100 rounded-2xl p-4 flex justify-between gap-3">
+            <div>
+              <p class="font-semibold">23/04 - Almadina/BA</p>
+              <p class="text-gray-500 text-sm">Vaquejada</p>
+            </div>
+            <span class="text-green-700 font-medium">Confirmado</span>
+          </div>
+
+          <div class="bg-white border border-yellow-100 rounded-2xl p-4 flex justify-between gap-3">
+            <div>
+              <p class="font-semibold">25/04 - Itabuna/BA</p>
+              <p class="text-gray-500 text-sm">Aniversário</p>
+            </div>
+            <span class="text-yellow-600 font-medium">Pendente</span>
+          </div>
+
+          <div class="bg-white border border-blue-100 rounded-2xl p-4 flex justify-between gap-3">
+            <div>
+              <p class="font-semibold">28/04 - Ilhéus/BA</p>
+              <p class="text-gray-500 text-sm">Festival</p>
+            </div>
+            <span class="text-blue-600 font-medium">Agendado</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Equipe -->
+      <section class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
+        <div class="flex justify-between mb-5">
+          <h3 class="text-2xl font-bold">Equipe</h3>
+          <button class="bg-green-50 text-green-700 px-4 py-2 rounded-xl">
+            + Usuário
+          </button>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="bg-green-50 border border-green-100 rounded-2xl p-4">
+            <p class="font-semibold">Felipe</p>
+            <p class="text-gray-500 text-sm">Admin</p>
+          </div>
+
+          <div class="bg-white border border-green-100 rounded-2xl p-4">
+            <p class="font-semibold">Luiz</p>
+            <p class="text-gray-500 text-sm">Produção</p>
+          </div>
+
+          <div class="bg-white border border-green-100 rounded-2xl p-4">
+            <p class="font-semibold">Equipe Técnica</p>
+            <p class="text-gray-500 text-sm">Operacional</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal criar show -->
+  <div id="createShowModal" class="fixed inset-0 hidden z-[70] items-center justify-center p-4">
+    <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-green-100 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+        <h3 class="text-3xl font-light text-gray-700">Novo lançamento</h3>
+        <button onclick="closeCreateShowModal()" class="text-3xl text-gray-400 hover:text-gray-700">&times;</button>
       </div>
-    </section>
 
-  </main>
-</div>
+      <div class="p-6 md:p-8">
+        <div class="mb-8">
+          <h2 class="text-4xl md:text-5xl font-light text-gray-500">Agenda Lux</h2>
+        </div>
 
-<script>
-function toggleMenu() {
-  document.getElementById('sidebar').classList.toggle('-translate-x-full');
-  document.getElementById('overlay').classList.toggle('hidden');
-}
-</script>
+        <div class="w-full bg-gray-100 rounded-full h-4 overflow-hidden mb-8">
+          <div class="bg-green-500 h-4 w-1/2 flex items-center justify-center text-white text-xs font-bold">PASSO 1</div>
+        </div>
+
+        <h4 class="text-3xl font-bold text-gray-600 mb-8">INFORMAÇÕES BÁSICAS</h4>
+
+        <div class="grid md:grid-cols-2 gap-5">
+          <div class="md:col-span-2">
+            <label class="block text-lg font-semibold text-gray-600 mb-2">Tipo de lançamento</label>
+            <select class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
+              <option>Show</option>
+              <option>Evento promocional</option>
+              <option>Entrevista</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-lg font-semibold text-gray-600 mb-2">Data</label>
+            <input id="showDate" type="date" class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
+          </div>
+
+          <div>
+            <label class="block text-lg font-semibold text-gray-600 mb-2">Horário</label>
+            <input type="time" class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
+          </div>
+
+          <div>
+            <label class="block text-lg font-semibold text-gray-600 mb-2">Estado</label>
+            <select class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
+              <option>Selecione</option>
+              <option>Bahia</option>
+              <option>Minas Gerais</option>
+              <option>São Paulo</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-lg font-semibold text-gray-600 mb-2">Cidade</label>
+            <input type="text" placeholder="Digite a cidade" class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-lg font-semibold text-gray-600 mb-2">Título</label>
+            <input type="text" placeholder="Ex: Vaquejada do Parque" class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-lg font-semibold text-gray-600 mb-2">Contratante</label>
+            <input type="text" placeholder="Nome do contratante" class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-lg font-semibold text-gray-600 mb-2">Informações adicionais</label>
+            <textarea rows="4" placeholder="Observações do show..." class="w-full px-4 py-3 rounded-2xl border border-gray-300 bg-white text-gray-700"></textarea>
+          </div>
+        </div>
+
+        <div class="text-center mt-8">
+          <p class="text-gray-500 text-lg mb-5">Clique em continuar para prosseguir para o próximo passo!</p>
+          <button class="bg-green-500 hover:bg-green-600 text-white text-2xl px-10 py-4 rounded-2xl font-medium">
+            Continuar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      document.getElementById('sidebar').classList.toggle('-translate-x-full');
+      document.getElementById('overlay').classList.toggle('hidden');
+    }
+
+    function openCreateShowModal(date = '') {
+      document.getElementById('createShowModal').classList.remove('hidden');
+      document.getElementById('createShowModal').classList.add('flex');
+      document.getElementById('modalOverlay').classList.remove('hidden');
+      if (date) {
+        document.getElementById('showDate').value = date;
+      } else {
+        document.getElementById('showDate').value = '';
+      }
+    }
+
+    function closeCreateShowModal() {
+      document.getElementById('createShowModal').classList.add('hidden');
+      document.getElementById('createShowModal').classList.remove('flex');
+      document.getElementById('modalOverlay').classList.add('hidden');
+    }
+  </script>
 
 </body>
 </html>

@@ -1,7 +1,6 @@
 import { supabase } from './supabase.js'
 
 let currentUserRole = null
-let isLoadingShows = false
 
 function getActiveProjectId() {
   return localStorage.getItem('activeProjectId')
@@ -23,10 +22,7 @@ async function loadCurrentUserRole() {
   if (!user) return null
 
   const activeProjectId = getActiveProjectId()
-  if (!activeProjectId) {
-    currentUserRole = null
-    return null
-  }
+  if (!activeProjectId) return null
 
   const { data, error } = await supabase
     .from('project_members')
@@ -104,9 +100,8 @@ function renderEmptyState(container) {
 
 function renderShowCard(show) {
   const meta = getStatusMeta(show.status)
-
   const titulo = escapeHtml(show.titulo || 'Sem título')
-  const horario = escapeHtml(show.horario || '--:--')
+  const horario = escapeHtml(show.horario || 'Sem horário')
   const cidade = escapeHtml(show.cidade || '')
   const estado = escapeHtml(show.estado || '')
   const contratante = escapeHtml(show.contratante || '')
@@ -115,7 +110,7 @@ function renderShowCard(show) {
   const el = document.createElement('button')
   el.type = 'button'
   el.dataset.showId = show.id
-  el.className = `w-full text-left rounded-2xl border p-3 mt-2 transition hover:shadow-sm hover:scale-[1.01] ${meta.cardClass}`
+  el.className = `w-full text-left rounded-2xl border p-3 mt-2 transition hover:shadow-sm ${meta.cardClass}`
 
   el.innerHTML = `
     <div class="flex items-start justify-between gap-2 mb-2">
@@ -157,124 +152,68 @@ function getDayContainerByDate(date) {
   return day.querySelector('.events-container')
 }
 
-function clearCalendarDays() {
+function addShowToCalendar(show) {
+  const container = getDayContainerByDate(show.data)
+  if (!container) return
+  loadShows()
+}
+
+function removeShowFromCalendar(showId, date) {
+  const container = getDayContainerByDate(date)
+  if (!container) return
+  loadShows()
+}
+
+function updateShowInCalendar(oldShow, updatedShow) {
+  loadShows()
+}
+
+async function loadShows() {
+  const user = await getUser()
+  if (!user) return
+
+  await loadCurrentUserRole()
+
+  const activeProjectId = getActiveProjectId()
+
+  if (!activeProjectId) {
+    document.querySelectorAll('.events-container').forEach(renderEmptyState)
+    return
+  }
+
+  const { data: shows, error } = await supabase
+    .from('shows')
+    .select('*')
+    .eq('project_id', activeProjectId)
+
+  if (error) {
+    console.error('Erro ao buscar shows:', error)
+    return
+  }
+
   document.querySelectorAll('.events-container').forEach(container => {
     container.innerHTML = ''
     renderEmptyState(container)
   })
-}
 
-function calendarIsReady() {
-  return document.querySelectorAll('[data-date]').length > 0
-}
+  const grouped = {}
 
-async function loadShows() {
-  if (isLoadingShows) return
-  isLoadingShows = true
+  sortShows(shows || []).forEach(show => {
+    const date = normalizeDate(show.data)
+    if (!grouped[date]) grouped[date] = []
+    grouped[date].push(show)
+  })
 
-  try {
-    const user = await getUser()
-    if (!user) return
+  Object.keys(grouped).forEach(date => {
+    const container = getDayContainerByDate(date)
+    if (!container) return
 
-    await loadCurrentUserRole()
+    container.innerHTML = ''
 
-    const activeProjectId = getActiveProjectId()
-
-    if (!activeProjectId) {
-      clearCalendarDays()
-      return
-    }
-
-    if (!calendarIsReady()) {
-      return
-    }
-
-    const { data: shows, error } = await supabase
-      .from('shows')
-      .select('*')
-      .eq('project_id', activeProjectId)
-
-    if (error) {
-      console.error('Erro ao buscar shows:', error)
-      clearCalendarDays()
-      return
-    }
-
-    clearCalendarDays()
-
-    const grouped = {}
-
-    sortShows(shows || []).forEach(show => {
-      const date = normalizeDate(show.data)
-      if (!grouped[date]) grouped[date] = []
-      grouped[date].push(show)
+    grouped[date].forEach(show => {
+      container.appendChild(renderShowCard(show))
     })
-
-    Object.keys(grouped).forEach(date => {
-      const container = getDayContainerByDate(date)
-      if (!container) return
-
-      container.innerHTML = ''
-
-      grouped[date].forEach(show => {
-        container.appendChild(renderShowCard(show))
-      })
-    })
-  } finally {
-    isLoadingShows = false
-  }
-}
-
-function addShowToCalendar() {
-  loadShows()
-}
-
-function removeShowFromCalendar() {
-  loadShows()
-}
-
-function updateShowInCalendar() {
-  loadShows()
-}
-
-document.addEventListener('calendar:rendered', () => {
-  loadShows()
-})
-
-window.addEventListener('showsChanged', () => {
-  loadShows()
-})
-
-window.addEventListener('storage', e => {
-  if (e.key === 'activeProjectId') {
-    loadShows()
-  }
-})
-
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    if (typeof window.loadShows === 'function') {
-      window.loadShows()
-    }
-  }, 300)
-
-  setTimeout(() => {
-    if (typeof window.loadShows === 'function') {
-      window.loadShows()
-    }
-  }, 800)
-
-  setTimeout(() => {
-    if (typeof window.loadShows === 'function') {
-      window.loadShows()
-    }
-  }, 1500)
-})
-
-if (document.readyState === 'complete') {
-  setTimeout(() => {
-    loadShows()
-  }, 200)
+  })
 }
 
 window.loadShows = loadShows
@@ -283,3 +222,9 @@ window.removeShowFromCalendar = removeShowFromCalendar
 window.updateShowInCalendar = updateShowInCalendar
 window.canManageAgenda = canManageAgenda
 window.loadCurrentUserRole = loadCurrentUserRole
+
+window.addEventListener('showsChanged', loadShows)
+
+setTimeout(() => {
+  loadShows()
+}, 0)

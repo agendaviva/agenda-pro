@@ -1,3 +1,11 @@
+const currentPage = window.location.pathname.split("/").pop();
+
+function activeClass(page) {
+  return currentPage === page
+    ? "bg-green-600 text-white"
+    : "text-gray-700 hover:bg-green-50";
+}
+
 document.getElementById("menu-container").innerHTML = `
   <!-- Overlay mobile -->
   <div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/40 hidden z-40 md:hidden"></div>
@@ -12,27 +20,27 @@ document.getElementById("menu-container").innerHTML = `
 
     <nav class="space-y-3">
 
-      <a href="dashboard.html" class="block px-4 py-3 rounded-2xl font-semibold hover:bg-green-50 transition">
+      <a href="dashboard.html" class="block px-4 py-3 rounded-2xl font-semibold ${activeClass("dashboard.html")}">
         Dashboard
       </a>
 
-      <a href="calendario.html" class="block px-4 py-3 rounded-2xl font-semibold hover:bg-green-50 transition">
+      <a href="calendario.html" class="block px-4 py-3 rounded-2xl font-semibold ${activeClass("calendario.html")}">
         Calendário
       </a>
 
-      <a href="shows.html" class="block px-4 py-3 rounded-2xl font-semibold hover:bg-green-50 transition">
+      <a href="shows.html" class="block px-4 py-3 rounded-2xl font-semibold ${activeClass("shows.html")}">
         Shows
       </a>
 
-      <a href="equipe.html" class="block px-4 py-3 rounded-2xl font-semibold hover:bg-green-50 transition">
+      <a href="equipe.html" class="block px-4 py-3 rounded-2xl font-semibold ${activeClass("equipe.html")}">
         Equipe
       </a>
 
-      <a href="mensagens.html" class="block px-4 py-3 rounded-2xl font-semibold hover:bg-green-50 transition">
+      <a href="mensagens.html" class="block px-4 py-3 rounded-2xl font-semibold ${activeClass("mensagens.html")}">
         Mensagens
       </a>
 
-      <a href="configuracoes.html" class="block px-4 py-3 rounded-2xl font-semibold hover:bg-green-50 transition">
+      <a href="configuracoes.html" class="block px-4 py-3 rounded-2xl font-semibold ${activeClass("configuracoes.html")}">
         Configurações
       </a>
 

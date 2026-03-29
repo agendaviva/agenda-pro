@@ -1,7 +1,5 @@
 import { supabase } from './supabase.js'
 
-console.log('CONVITE JS NOVO CARREGADO')
-
 const inviteStatus = document.getElementById('inviteStatus')
 const inviteInfo = document.getElementById('inviteInfo')
 const inviteEmailInput = document.getElementById('inviteEmail')
@@ -38,28 +36,66 @@ function setStatus(text, type = 'default') {
   }
 }
 
+function ensureDebugBox() {
+  let box = document.getElementById('inviteDebugBox')
+
+  if (!box) {
+    box = document.createElement('pre')
+    box.id = 'inviteDebugBox'
+    box.className = 'mt-4 p-4 rounded-2xl border border-gray-200 bg-gray-50 text-xs text-gray-700 whitespace-pre-wrap break-words'
+    inviteStatus?.parentElement?.insertAdjacentElement('afterend', box)
+  }
+
+  return box
+}
+
+function setDebug(data) {
+  const box = ensureDebugBox()
+  if (!box) return
+
+  try {
+    box.textContent = JSON.stringify(data, null, 2)
+  } catch {
+    box.textContent = String(data)
+  }
+}
+
 async function getUser() {
   const { data, error } = await supabase.auth.getUser()
 
-  if (error) {
-    console.error('GET USER ERROR:', error)
-    return null
+  return {
+    user: data?.user || null,
+    error: error || null
   }
-
-  return data?.user || null
 }
 
 async function loadInvite() {
   const token = getTokenFromUrl()
-  console.log('TOKEN URL:', token)
+
+  const authResult = await getUser()
+  const user = authResult.user
+
+  const debugStart = {
+    step: 'loadInvite:start',
+    url: window.location.href,
+    pathname: window.location.pathname,
+    search: window.location.search,
+    token,
+    loggedIn: !!user,
+    userEmail: user?.email || null,
+    authError: authResult.error ? {
+      message: authResult.error.message,
+      code: authResult.error.code || null
+    } : null
+  }
+
+  setDebug(debugStart)
 
   if (!token) {
     setStatus('Convite inválido.', 'error')
     if (goLoginBtn) goLoginBtn.classList.remove('hidden')
     return
   }
-
-  const user = await getUser()
 
   if (!user) {
     setStatus('Faça login para visualizar e aceitar este convite.')
@@ -73,12 +109,21 @@ async function loadInvite() {
     .eq('token', token)
     .maybeSingle()
 
-  console.log('INVITE:', invite)
-  console.log('INVITE ERROR:', error)
-  console.log('USER LOGADO:', user)
+  setDebug({
+    step: 'loadInvite:queryResult',
+    token,
+    loggedIn: !!user,
+    userEmail: user?.email || null,
+    invite,
+    error: error ? {
+      message: error.message,
+      code: error.code || null,
+      details: error.details || null,
+      hint: error.hint || null
+    } : null
+  })
 
   if (error) {
-    console.error('LOAD INVITE ERROR:', error)
     setStatus('Erro ao carregar convite.', 'error')
     if (goLoginBtn) goLoginBtn.classList.remove('hidden')
     return
@@ -111,7 +156,8 @@ async function loadInvite() {
 async function acceptInvite() {
   if (!currentInvite) return
 
-  const user = await getUser()
+  const authResult = await getUser()
+  const user = authResult.user
 
   if (!user) {
     window.location.href = `login.html?next=${encodeURIComponent(window.location.pathname + window.location.search)}`
@@ -138,18 +184,25 @@ async function acceptInvite() {
     .eq('user_id', user.id)
     .maybeSingle()
 
-  console.log('EXISTING MEMBER:', existingMember)
-  console.log('EXISTING MEMBER ERROR:', existingError)
+  setDebug({
+    step: 'acceptInvite:existingMember',
+    currentInvite,
+    userEmail,
+    inviteEmail,
+    existingMember,
+    existingError: existingError ? {
+      message: existingError.message,
+      code: existingError.code || null,
+      details: existingError.details || null,
+      hint: existingError.hint || null
+    } : null
+  })
 
   if (existingMember) {
-    const { error: acceptedUpdateError } = await supabase
+    await supabase
       .from('project_invitations')
       .update({ status: 'accepted' })
       .eq('id', currentInvite.id)
-
-    if (acceptedUpdateError) {
-      console.error('UPDATE ACCEPTED ERROR:', acceptedUpdateError)
-    }
 
     localStorage.setItem('activeProjectId', currentInvite.project_id)
     setStatus('Você já faz parte dessa agenda.', 'success')
@@ -168,7 +221,17 @@ async function acceptInvite() {
     ])
 
   if (memberError) {
-    console.error('INSERT MEMBER ERROR:', memberError)
+    setDebug({
+      step: 'acceptInvite:insertMemberError',
+      currentInvite,
+      memberError: {
+        message: memberError.message,
+        code: memberError.code || null,
+        details: memberError.details || null,
+        hint: memberError.hint || null
+      }
+    })
+
     setStatus('Erro ao entrar na equipe.', 'error')
 
     if (acceptInviteBtn) {
@@ -184,7 +247,15 @@ async function acceptInvite() {
     .eq('id', currentInvite.id)
 
   if (updateError) {
-    console.error('UPDATE INVITE ERROR:', updateError)
+    setDebug({
+      step: 'acceptInvite:updateInvitationError',
+      updateError: {
+        message: updateError.message,
+        code: updateError.code || null,
+        details: updateError.details || null,
+        hint: updateError.hint || null
+      }
+    })
   }
 
   localStorage.setItem('activeProjectId', currentInvite.project_id)

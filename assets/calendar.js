@@ -62,9 +62,7 @@ function sortShows(shows) {
     const dateA = normalizeDate(a.data)
     const dateB = normalizeDate(b.data)
 
-    if (dateA !== dateB) {
-      return dateA.localeCompare(dateB)
-    }
+    if (dateA !== dateB) return dateA.localeCompare(dateB)
 
     const timeA = a.horario || '99:99'
     const timeB = b.horario || '99:99'
@@ -76,20 +74,28 @@ function getStatusMeta(status) {
   if (status === 'confirmado') {
     return {
       label: 'Confirmado',
-      wrapperClass: 'border-green-200 bg-green-50',
+      cardClass: 'border-green-200 bg-green-50',
       badgeClass: 'bg-green-100 text-green-700 border border-green-200',
       textClass: 'text-green-700',
-      emptyDotClass: 'bg-green-500'
+      dotClass: 'bg-green-500'
     }
   }
 
   return {
     label: 'Reserva',
-    wrapperClass: 'border-amber-200 bg-amber-50',
+    cardClass: 'border-amber-200 bg-amber-50',
     badgeClass: 'bg-amber-100 text-amber-700 border border-amber-200',
     textClass: 'text-amber-700',
-    emptyDotClass: 'bg-amber-500'
+    dotClass: 'bg-amber-500'
   }
+}
+
+function renderEmptyState(container) {
+  container.innerHTML = `
+    <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-3 py-4 text-center text-sm text-gray-400">
+      Sem eventos
+    </div>
+  `
 }
 
 function renderShowCard(show) {
@@ -99,12 +105,12 @@ function renderShowCard(show) {
   const cidade = escapeHtml(show.cidade || '')
   const estado = escapeHtml(show.estado || '')
   const contratante = escapeHtml(show.contratante || '')
-  const localTexto = cidade ? `${cidade}${estado ? `/${estado}` : ''}` : 'Cidade não definida'
+  const local = cidade ? `${cidade}${estado ? `/${estado}` : ''}` : 'Cidade não definida'
 
   const el = document.createElement('button')
   el.type = 'button'
-  el.className = `w-full text-left rounded-2xl border p-3 mt-2 transition hover:shadow-sm ${meta.wrapperClass}`
   el.dataset.showId = show.id
+  el.className = `w-full text-left rounded-2xl border p-3 mt-2 transition hover:shadow-sm ${meta.cardClass}`
 
   el.innerHTML = `
     <div class="flex items-start justify-between gap-2 mb-2">
@@ -114,12 +120,12 @@ function renderShowCard(show) {
       </div>
 
       <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold ${meta.badgeClass}">
-        <span class="w-2 h-2 rounded-full ${meta.emptyDotClass}"></span>
+        <span class="w-2 h-2 rounded-full ${meta.dotClass}"></span>
         ${meta.label}
       </span>
     </div>
 
-    <p class="text-sm text-gray-700 truncate">${localTexto}</p>
+    <p class="text-sm text-gray-700 truncate">${local}</p>
 
     <p class="text-xs text-gray-500 mt-1 truncate">
       ${contratante ? `Contratante: ${contratante}` : 'Sem contratante'}
@@ -139,26 +145,6 @@ function renderShowCard(show) {
   return el
 }
 
-function ensureEmptyState(container) {
-  if (!container.querySelector('[data-show-id]')) {
-    container.innerHTML = `
-      <div class="rounded-2xl border border-dashed border-gray-200 px-3 py-4 text-sm text-gray-400 text-center bg-gray-50/60">
-        Sem eventos
-      </div>
-    `
-  }
-}
-
-function removeEmptyState(container) {
-  const hasOnlyEmpty =
-    container.children.length === 1 &&
-    container.textContent.trim() === 'Sem eventos'
-
-  if (hasOnlyEmpty) {
-    container.innerHTML = ''
-  }
-}
-
 function getDayContainerByDate(date) {
   const cleanDate = normalizeDate(date)
   const day = document.querySelector(`[data-date="${cleanDate}"]`)
@@ -169,38 +155,17 @@ function getDayContainerByDate(date) {
 function addShowToCalendar(show) {
   const container = getDayContainerByDate(show.data)
   if (!container) return
-
-  removeEmptyState(container)
-  container.appendChild(renderShowCard(show))
+  loadShows()
 }
 
 function removeShowFromCalendar(showId, date) {
   const container = getDayContainerByDate(date)
   if (!container) return
-
-  const card = container.querySelector(`[data-show-id="${showId}"]`)
-  if (card) card.remove()
-
-  ensureEmptyState(container)
+  loadShows()
 }
 
 function updateShowInCalendar(oldShow, updatedShow) {
-  const oldDate = normalizeDate(oldShow.data)
-  const newDate = normalizeDate(updatedShow.data)
-
-  if (oldDate !== newDate) {
-    removeShowFromCalendar(oldShow.id, oldDate)
-    addShowToCalendar(updatedShow)
-    return
-  }
-
-  const container = getDayContainerByDate(oldDate)
-  if (!container) return
-
-  const oldCard = container.querySelector(`[data-show-id="${oldShow.id}"]`)
-  if (oldCard) {
-    oldCard.replaceWith(renderShowCard(updatedShow))
-  }
+  loadShows()
 }
 
 async function loadShows() {
@@ -212,9 +177,7 @@ async function loadShows() {
   const activeProjectId = getActiveProjectId()
 
   if (!activeProjectId) {
-    document.querySelectorAll('.events-container').forEach(container => {
-      ensureEmptyState(container)
-    })
+    document.querySelectorAll('.events-container').forEach(renderEmptyState)
     return
   }
 
@@ -230,7 +193,7 @@ async function loadShows() {
 
   document.querySelectorAll('.events-container').forEach(container => {
     container.innerHTML = ''
-    ensureEmptyState(container)
+    renderEmptyState(container)
   })
 
   const grouped = {}

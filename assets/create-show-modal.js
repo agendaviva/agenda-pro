@@ -3,6 +3,10 @@ import { supabase } from './supabase.js'
 let editingId = null
 let editingOriginalShow = null
 
+function getActiveProjectId() {
+  return localStorage.getItem('activeProjectId')
+}
+
 async function getUser() {
   const { data, error } = await supabase.auth.getUser()
 
@@ -54,7 +58,6 @@ document.getElementById("create-show-modal-container").innerHTML = `
               <div>
                 <label class="block mb-2 text-sm font-medium text-gray-700">Horário</label>
                 <input id="showTime" type="time" class="w-full h-12 px-3 border rounded-xl">
-                <p class="text-xs text-gray-400 mt-1">Se não definir, ficará sem horário.</p>
               </div>
 
               <div>
@@ -172,21 +175,16 @@ async function saveShow() {
   const user = await getUser()
   if (!user) return
 
+  const projectId = getActiveProjectId()
+
+  if (!projectId) {
+    alert('Nenhuma agenda selecionada')
+    return
+  }
+
   let error = null
 
   if (editingId) {
-    const updatedShow = {
-      id: editingId,
-      user_id: user.id,
-      data,
-      horario,
-      cidade,
-      estado,
-      titulo,
-      contratante,
-      observacoes
-    }
-
     const res = await supabase
       .from('shows')
       .update({
@@ -205,13 +203,13 @@ async function saveShow() {
     error = res.error
 
     if (!error && window.updateShowInCalendar && editingOriginalShow) {
-      window.updateShowInCalendar(editingOriginalShow, res.data || updatedShow)
+      window.updateShowInCalendar(editingOriginalShow, res.data)
     }
   } else {
     const res = await supabase
       .from('shows')
       .insert([{
-        user_id: user.id,
+        project_id: projectId,
         data,
         horario,
         cidade,
@@ -232,6 +230,7 @@ async function saveShow() {
 
   if (error) {
     alert('Erro ao salvar')
+    console.error(error)
     return
   }
 
@@ -244,9 +243,6 @@ async function deleteCurrentShow() {
 
   const confirmar = confirm('Excluir essa data?')
   if (!confirmar) return
-
-  const user = await getUser()
-  if (!user) return
 
   const { error } = await supabase
     .from('shows')

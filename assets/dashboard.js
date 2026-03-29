@@ -1,16 +1,22 @@
+import { supabase } from './supabase.js'
+
+// 🔥 MENU DO USUÁRIO
 async function setupUserMenu() {
   const { data } = await supabase.auth.getUser()
   if (!data.user) return
 
   let nome = data.user.user_metadata?.nome || data.user.email || 'Usuário'
-  const firstName = nome.split(' ')[0]
+  const firstName = nome.trim().split(' ')[0]
 
+  // nome
   const nameEl = document.getElementById('userName')
   if (nameEl) nameEl.textContent = firstName
 
+  // avatar
   const avatarEl = document.getElementById('userAvatar')
   if (avatarEl) avatarEl.textContent = firstName.charAt(0).toUpperCase()
 
+  // dropdown
   const btn = document.getElementById('userMenuBtn')
   const dropdown = document.getElementById('userDropdown')
 
@@ -26,6 +32,7 @@ async function setupUserMenu() {
     })
   }
 
+  // logout
   const logoutBtn = document.getElementById('logoutBtn')
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
@@ -35,8 +42,7 @@ async function setupUserMenu() {
   }
 }
 
-import { supabase } from './supabase.js'
-
+// 🔐 USUÁRIO
 async function getUser() {
   const { data, error } = await supabase.auth.getUser()
 
@@ -49,7 +55,7 @@ async function getUser() {
   return data.user
 }
 
-// 🔥 NOVO: função de boas-vindas
+// 👋 BOAS-VINDAS
 async function setWelcomeUser() {
   const { data, error } = await supabase.auth.getUser()
 
@@ -69,6 +75,7 @@ async function setWelcomeUser() {
   }
 }
 
+// 📅 FORMATOS
 function formatDateBR(dateString) {
   const [year, month, day] = String(dateString).split('T')[0].split('-')
   return `${day}/${month}/${year}`
@@ -86,6 +93,7 @@ function getTodayLocal() {
   return `${year}-${month}-${day}`
 }
 
+// 📊 ORDENAR
 function sortShows(shows) {
   return [...shows].sort((a, b) => {
     const dateA = normalizeDateOnly(a.data)
@@ -99,6 +107,7 @@ function sortShows(shows) {
   })
 }
 
+// 📋 RENDER LISTA
 function renderUpcomingShows(shows) {
   const list = document.getElementById('upcomingShowsList')
 
@@ -142,6 +151,7 @@ function renderUpcomingShows(shows) {
   })
 }
 
+// 📊 RESUMO
 function updateSummary(shows) {
   const today = getTodayLocal()
   const now = new Date()
@@ -187,11 +197,11 @@ function updateSummary(shows) {
   renderUpcomingShows(upcomingShows.slice(0, 5))
 }
 
+// 🚀 LOAD
 async function loadDashboard() {
   const user = await getUser()
   if (!user) return
 
-  // 🔥 CHAMA AQUI
   await setWelcomeUser()
 
   const { data: shows, error } = await supabase
@@ -209,7 +219,9 @@ async function loadDashboard() {
   updateSummary(shows || [])
 }
 
+// 🔁 EVENTO GLOBAL
 window.addEventListener('showsChanged', loadDashboard)
 
+// 🚀 START
 setupUserMenu()
 loadDashboard()

@@ -1,3 +1,40 @@
+async function setupUserMenu() {
+  const { data } = await supabase.auth.getUser()
+  if (!data.user) return
+
+  let nome = data.user.user_metadata?.nome || data.user.email || 'Usuário'
+  const firstName = nome.split(' ')[0]
+
+  const nameEl = document.getElementById('userName')
+  if (nameEl) nameEl.textContent = firstName
+
+  const avatarEl = document.getElementById('userAvatar')
+  if (avatarEl) avatarEl.textContent = firstName.charAt(0).toUpperCase()
+
+  const btn = document.getElementById('userMenuBtn')
+  const dropdown = document.getElementById('userDropdown')
+
+  if (btn && dropdown) {
+    btn.addEventListener('click', () => {
+      dropdown.classList.toggle('hidden')
+    })
+
+    document.addEventListener('click', (e) => {
+      if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden')
+      }
+    })
+  }
+
+  const logoutBtn = document.getElementById('logoutBtn')
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+      await supabase.auth.signOut()
+      window.location.href = 'login.html'
+    })
+  }
+}
+
 import { supabase } from './supabase.js'
 
 async function getUser() {

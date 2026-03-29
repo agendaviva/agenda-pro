@@ -6,8 +6,6 @@ const reloadBtn = document.getElementById('reloadBtn')
 const adminMessage = document.getElementById('adminMessage')
 
 let allProfiles = []
-let allProjects = []
-let currentUser = null
 
 function setMessage(text, type = 'default') {
   if (!adminMessage) return
@@ -35,6 +33,25 @@ async function getUser() {
   return data.user
 }
 
+async function ensureAdminAccess() {
+  const user = await getUser()
+  if (!user) return null
+
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('id, nome, email, is_admin')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (error || !profile || !profile.is_admin) {
+    alert('Acesso restrito.')
+    window.location.href = 'dashboard.html'
+    return null
+  }
+
+  return profile
+}
+
 function getFilteredProfiles() {
   const term = (searchInput?.value || '').trim().toLowerCase()
 
@@ -45,10 +62,6 @@ function getFilteredProfiles() {
     const email = (profile.email || '').toLowerCase()
     return nome.includes(term) || email.includes(term)
   })
-}
-
-function getProjectsByOwner(userId) {
-  return allProjects.filter(project => project.owner_user_id === userId)
 }
 
 function renderUsers() {
@@ -63,11 +76,11 @@ function renderUsers() {
     const nome = profile.nome || 'Usuário'
     const email = profile.email || 'Sem e-mail'
     const coins = Number(profile.coins || 0)
-    const userProjects = getProjectsByOwner(profile.id)
+    const isAdmin = Boolean(profile.is_admin)
 
     return `
       <div class="border border-green-100 rounded-3xl p-5 bg-white">
-        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
           <div class="min-w-0">
             <div class="flex items-center gap-3 mb-3">
               <div class="w-11 h-11 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-lg shrink-0">
@@ -80,24 +93,17 @@ function renderUsers() {
               </div>
             </div>
 
-            <div class="flex items-center gap-2 mb-4">
+            <div class="flex flex-wrap items-center gap-2">
               <span class="bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-2xl text-sm font-semibold">
                 🪙 ${coins} moedas
               </span>
-            </div>
 
-            <div>
-              <p class="text-sm font-medium text-gray-700 mb-2">Agendas</p>
               ${
-                userProjects.length
-                  ? `<div class="flex flex-wrap gap-2">
-                      ${userProjects.map(project => `
-                        <span class="bg-green-50 border border-green-100 text-green-700 px-3 py-1 rounded-2xl text-sm">
-                          ${project.name}
-                        </span>
-                      `).join('')}
-                    </div>`
-                  : `<p class="text-sm text-gray-400">Nenhuma agenda criada.</p>`
+                isAdmin
+                  ? `<span class="bg-green-50 border border-green-200 text-green-700 px-3 py-1 rounded-2xl text-sm font-semibold">
+                      ADM
+                    </span>`
+                  : ''
               }
             </div>
           </div>
@@ -158,7 +164,7 @@ function bindActions() {
 async function loadProfiles() {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, nome, email, coins')
+    .select('id, nome, email, coins, is_admin')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -169,21 +175,6 @@ async function loadProfiles() {
   }
 
   allProfiles = data || []
-}
-
-async function loadProjects() {
-  const { data, error } = await supabase
-    .from('projects')
-    .select('id, name, owner_user_id, expires_at, is_active')
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error(error)
-    setMessage('Erro ao carregar agendas.', 'error')
-    return
-  }
-
-  allProjects = data || []
 }
 
 async function changeCoins(userId, mode) {
@@ -236,13 +227,12 @@ async function changeCoins(userId, mode) {
 }
 
 async function initPage() {
-  currentUser = await getUser()
-  if (!currentUser) return
+  const admin = await ensureAdminAccess()
+  if (!admin) return
 
   setMessage('Carregando dados...')
 
   await loadProfiles()
-  await loadProjects()
   renderUsers()
 
   setMessage('Painel atualizado.')

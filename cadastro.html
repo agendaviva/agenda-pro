@@ -47,12 +47,26 @@
           placeholder="Mínimo 6 caracteres"
           class="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-green-500"
           required
+          minlength="6"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar senha</label>
+        <input
+          type="password"
+          id="confirm-password"
+          placeholder="Repita sua senha"
+          class="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-green-500"
+          required
+          minlength="6"
         />
       </div>
 
       <button
         type="submit"
-        class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition"
+        id="submit-btn"
+        class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition disabled:opacity-70 disabled:cursor-not-allowed"
       >
         Criar conta
       </button>
@@ -79,6 +93,22 @@
 
     const form = document.getElementById('register-form');
     const message = document.getElementById('message');
+    const submitBtn = document.getElementById('submit-btn');
+
+    function setMessage(text, type = 'default') {
+      let colorClass = 'text-gray-500';
+
+      if (type === 'success') colorClass = 'text-green-600';
+      if (type === 'error') colorClass = 'text-red-600';
+
+      message.textContent = text;
+      message.className = `text-sm text-center mt-4 ${colorClass}`;
+    }
+
+    function setLoading(isLoading) {
+      submitBtn.disabled = isLoading;
+      submitBtn.textContent = isLoading ? 'Criando conta...' : 'Criar conta';
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -86,32 +116,52 @@
       const nome = document.getElementById('nome').value.trim();
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
 
-      message.textContent = 'Criando conta...';
-      message.className = 'text-sm text-center mt-4 text-gray-500';
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            nome: nome
-          }
-        }
-      });
-
-      if (error) {
-        message.textContent = 'Erro: ' + error.message;
-        message.className = 'text-sm text-center mt-4 text-red-600';
+      if (!nome) {
+        setMessage('Informe seu nome.', 'error');
         return;
       }
 
-      message.textContent = 'Conta criada com sucesso!';
-      message.className = 'text-sm text-center mt-4 text-green-600';
+      if (password.length < 6) {
+        setMessage('A senha deve ter no mínimo 6 caracteres.', 'error');
+        return;
+      }
 
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 1200);
+      if (password !== confirmPassword) {
+        setMessage('As senhas não coincidem.', 'error');
+        return;
+      }
+
+      setLoading(true);
+      setMessage('Criando conta...');
+
+      try {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              nome: nome
+            }
+          }
+        });
+
+        if (error) {
+          setMessage('Erro: ' + error.message, 'error');
+          setLoading(false);
+          return;
+        }
+
+        setMessage('Conta criada com sucesso! Redirecionando...', 'success');
+
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 1200);
+      } catch (err) {
+        setMessage('Erro inesperado ao criar conta.', 'error');
+        setLoading(false);
+      }
     });
   </script>
 

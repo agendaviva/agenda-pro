@@ -29,29 +29,25 @@ window.addEventListener('DOMContentLoaded', async () => {
   let activeProjectName = 'Selecionar agenda'
 
   if (supabase) {
-    const { data: userData } = await supabase.auth.getUser()
+    const { data: userData, error: userError } = await supabase.auth.getUser()
     user = userData?.user || null
+
+    console.log('USER ERROR:', userError)
+    console.log('USER:', user)
 
     if (user) {
       const fallbackName = user.user_metadata?.nome || ''
       const fallbackEmail = user.email || ''
 
-      await supabase
+      // APENAS LÊ O PROFILE
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .upsert(
-          [{
-            id: user.id,
-            nome: fallbackName,
-            email: fallbackEmail
-          }],
-          { onConflict: 'id' }
-        )
-
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('nome, email, coins, is_admin')
+        .select('id, nome, email, coins, is_admin')
         .eq('id', user.id)
         .maybeSingle()
+
+      console.log('PROFILE ERROR:', profileError)
+      console.log('PROFILE DATA:', profileData)
 
       profile = profileData || {
         nome: fallbackName,
@@ -60,7 +56,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         is_admin: false
       }
 
-      const { data: memberRows } = await supabase
+      const { data: memberRows, error: memberError } = await supabase
         .from('project_members')
         .select(`
           project_id,
@@ -71,6 +67,9 @@ window.addEventListener('DOMContentLoaded', async () => {
           )
         `)
         .eq('user_id', user.id)
+
+      console.log('PROJECT MEMBERS ERROR:', memberError)
+      console.log('PROJECT MEMBERS:', memberRows)
 
       if (memberRows && memberRows.length) {
         projects = memberRows.map(row => ({
@@ -102,8 +101,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     ''
 
   const initial = String(displayName).trim().charAt(0).toUpperCase() || 'U'
-  const coins = Number(profile?.coins || 0)
+  const coins = Number(profile?.coins ?? 0)
   const isAdmin = profile?.is_admin === true
+
+  console.log('IS ADMIN FINAL:', isAdmin)
+  console.log('PROFILE IS_ADMIN RAW:', profile?.is_admin)
 
   container.innerHTML = `
     <div id="overlay" class="fixed inset-0 bg-black/40 hidden z-40 md:hidden"></div>

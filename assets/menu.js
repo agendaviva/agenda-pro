@@ -1,5 +1,3 @@
-import { supabase } from './supabase.js'
-
 const currentPage = window.location.pathname.split("/").pop();
 
 function activeClass(page) {
@@ -9,13 +7,10 @@ function activeClass(page) {
 }
 
 document.getElementById("menu-container").innerHTML = `
-  <!-- Overlay mobile -->
   <div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/40 hidden z-40 md:hidden"></div>
 
-  <!-- Sidebar -->
-  <aside id="sidebar" class="fixed md:fixed z-50 top-0 left-0 h-full w-72 bg-white border-r border-green-100 p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 shadow-lg flex flex-col">
+  <aside id="sidebar" class="fixed z-50 top-0 left-0 h-full w-72 bg-white border-r border-green-100 p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 shadow-lg flex flex-col">
 
-    <!-- TOP -->
     <div>
       <div class="mb-10">
         <h1 class="text-2xl font-bold text-green-700">Agenda Lux</h1>
@@ -47,7 +42,6 @@ document.getElementById("menu-container").innerHTML = `
       </nav>
     </div>
 
-    <!-- 🔥 USER / LOGOUT -->
     <div class="mt-auto pt-6 border-t border-green-100">
 
       <div class="flex items-center gap-3 mb-4">
@@ -77,9 +71,11 @@ function toggleMenu() {
   overlay.classList.toggle("hidden");
 }
 
-// 🔥 SETUP USER
+// 🔥 PEGA USUÁRIO (SEM IMPORT)
 async function setupMenuUser() {
-  const { data } = await supabase.auth.getUser()
+  if (!window.supabase) return
+
+  const { data } = await window.supabase.auth.getUser()
   if (!data.user) return
 
   let nome = data.user.user_metadata?.nome || data.user.email || 'Usuário'
@@ -94,7 +90,7 @@ async function setupMenuUser() {
   const logoutBtn = document.getElementById('logoutBtn')
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
-      await supabase.auth.signOut()
+      await window.supabase.auth.signOut()
       window.location.href = 'login.html'
     })
   }

@@ -3,122 +3,149 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Agenda Pro</title>
+  <title>Agenda Lux</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-br from-white via-green-50 to-white text-gray-900 min-h-screen">
 
-  <div class="flex min-h-screen">
-    <!-- Sidebar -->
-    <aside class="w-72 bg-white/90 backdrop-blur border-r border-green-100 p-6 hidden md:block shadow-sm">
-      <div class="mb-10">
-        <h1 class="text-2xl font-bold text-green-700">Agenda Pro</h1>
-        <p class="text-sm text-gray-500 mt-1">Painel do empresário</p>
+<body class="bg-gradient-to-br from-white via-green-50 to-white text-gray-900">
+
+<!-- Overlay -->
+<div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/40 hidden z-40"></div>
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed md:relative z-50 top-0 left-0 h-full w-72 bg-white border-r border-green-100 p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 shadow-lg md:shadow-none">
+
+    <div class="mb-10">
+      <h1 class="text-2xl font-bold text-green-700">Agenda Lux</h1>
+      <p class="text-sm text-gray-500 mt-1">Painel do empresário</p>
+    </div>
+
+    <nav class="space-y-3">
+      <a href="#" class="block bg-green-600 text-white font-semibold px-4 py-3 rounded-2xl">Dashboard</a>
+      <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Calendário</a>
+      <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Shows</a>
+      <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Equipe</a>
+      <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Mensagens</a>
+      <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl">Configurações</a>
+    </nav>
+
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 p-6 md:p-10">
+
+    <!-- HEADER -->
+    <div class="flex items-center justify-between mb-8">
+
+      <!-- Botão mobile -->
+      <button onclick="toggleMenu()" class="md:hidden text-3xl text-green-700">
+        ☰
+      </button>
+
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 ml-3 md:ml-0">
+        Dashboard
+      </h2>
+
+      <button class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl font-semibold">
+        + Criar Show
+      </button>
+
+    </div>
+
+    <!-- Stats -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
+        <p class="text-gray-500 text-sm mb-2">Shows este mês</p>
+        <h3 class="text-4xl font-bold">12</h3>
       </div>
 
-      <nav class="space-y-3">
-        <a href="#" class="block bg-green-600 text-white font-semibold px-4 py-3 rounded-2xl shadow-sm">Dashboard</a>
-        <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl transition">Calendário</a>
-        <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl transition">Shows</a>
-        <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl transition">Equipe</a>
-        <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl transition">Mensagens</a>
-        <a href="#" class="block text-gray-700 hover:bg-green-50 px-4 py-3 rounded-2xl transition">Configurações</a>
-      </nav>
-    </aside>
+      <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
+        <p class="text-gray-500 text-sm mb-2">Usuários</p>
+        <h3 class="text-4xl font-bold">3</h3>
+      </div>
 
-    <!-- Main -->
-    <main class="flex-1 p-6 md:p-10">
-      <!-- Topbar -->
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-        <div>
-          <h2 class="text-3xl font-bold text-gray-900">Bem-vindo, Felipe 👋</h2>
-          <p class="text-gray-500 mt-1">Aqui você acompanha shows, equipe e automações.</p>
+      <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
+        <p class="text-gray-500 text-sm mb-2">Mensagens</p>
+        <h3 class="text-4xl font-bold">84</h3>
+      </div>
+    </section>
+
+    <!-- Shows -->
+    <section class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm mb-8">
+      <div class="flex justify-between mb-5">
+        <h3 class="text-2xl font-bold">Próximos Shows</h3>
+        <span class="text-green-700 text-sm">Ver todos</span>
+      </div>
+
+      <div class="space-y-4">
+
+        <div class="bg-green-50 border border-green-100 rounded-2xl p-4 flex justify-between">
+          <div>
+            <p class="font-semibold">23/04 - Almadina/BA</p>
+            <p class="text-gray-500 text-sm">Vaquejada</p>
+          </div>
+          <span class="text-green-700 font-medium">Confirmado</span>
         </div>
-        <button class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-2xl shadow-sm transition">
-          + Criar Show
+
+        <div class="bg-white border border-yellow-100 rounded-2xl p-4 flex justify-between">
+          <div>
+            <p class="font-semibold">25/04 - Itabuna/BA</p>
+            <p class="text-gray-500 text-sm">Aniversário</p>
+          </div>
+          <span class="text-yellow-600 font-medium">Pendente</span>
+        </div>
+
+        <div class="bg-white border border-blue-100 rounded-2xl p-4 flex justify-between">
+          <div>
+            <p class="font-semibold">28/04 - Ilhéus/BA</p>
+            <p class="text-gray-500 text-sm">Festival</p>
+          </div>
+          <span class="text-blue-600 font-medium">Agendado</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Equipe -->
+    <section class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
+      <div class="flex justify-between mb-5">
+        <h3 class="text-2xl font-bold">Equipe</h3>
+        <button class="bg-green-50 text-green-700 px-4 py-2 rounded-xl">
+          + Usuário
         </button>
       </div>
 
-      <!-- Stats -->
-      <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
-          <p class="text-gray-500 text-sm mb-2">Shows este mês</p>
-          <h3 class="text-4xl font-bold text-gray-900">12</h3>
+      <div class="grid md:grid-cols-3 gap-4">
+
+        <div class="bg-green-50 border border-green-100 rounded-2xl p-4">
+          <p class="font-semibold">Felipe</p>
+          <p class="text-gray-500 text-sm">Admin</p>
         </div>
 
-        <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
-          <p class="text-gray-500 text-sm mb-2">Usuários no plano</p>
-          <h3 class="text-4xl font-bold text-gray-900">3</h3>
+        <div class="bg-white border border-green-100 rounded-2xl p-4">
+          <p class="font-semibold">Luiz</p>
+          <p class="text-gray-500 text-sm">Produção</p>
         </div>
 
-        <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
-          <p class="text-gray-500 text-sm mb-2">Mensagens enviadas</p>
-          <h3 class="text-4xl font-bold text-gray-900">84</h3>
-        </div>
-      </section>
-
-      <!-- Próximos shows -->
-      <section class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm mb-8">
-        <div class="flex items-center justify-between mb-5">
-          <h3 class="text-2xl font-bold text-gray-900">Próximos Shows</h3>
-          <a href="#" class="text-green-700 text-sm font-medium">Ver todos</a>
+        <div class="bg-white border border-green-100 rounded-2xl p-4">
+          <p class="font-semibold">Equipe Técnica</p>
+          <p class="text-gray-500 text-sm">Operacional</p>
         </div>
 
-        <div class="space-y-4">
-          <div class="bg-gradient-to-r from-green-50 to-white border border-green-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <p class="font-semibold text-lg text-gray-900">23/04 - Almadina/BA</p>
-              <p class="text-gray-500">Vaquejada do Parque</p>
-            </div>
-            <span class="bg-green-100 text-green-700 px-4 py-2 rounded-xl text-sm font-medium">Confirmado</span>
-          </div>
+      </div>
+    </section>
 
-          <div class="bg-white border border-yellow-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <p class="font-semibold text-lg text-gray-900">25/04 - Itabuna/BA</p>
-              <p class="text-gray-500">Aniversário da Cidade</p>
-            </div>
-            <span class="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-xl text-sm font-medium">Pendente</span>
-          </div>
+  </main>
+</div>
 
-          <div class="bg-white border border-blue-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <p class="font-semibold text-lg text-gray-900">28/04 - Ilhéus/BA</p>
-              <p class="text-gray-500">Festival de Arrocha</p>
-            </div>
-            <span class="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-sm font-medium">Agendado</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Equipe -->
-      <section class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
-        <div class="flex items-center justify-between mb-5">
-          <h3 class="text-2xl font-bold text-gray-900">Usuários da Equipe</h3>
-          <button class="bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-xl text-sm font-medium transition">
-            + Adicionar usuário
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-green-50/70 border border-green-100 rounded-2xl p-4">
-            <p class="font-semibold text-gray-900">Felipe</p>
-            <p class="text-gray-500 text-sm">Administrador</p>
-          </div>
-
-          <div class="bg-white border border-green-100 rounded-2xl p-4">
-            <p class="font-semibold text-gray-900">Luiz</p>
-            <p class="text-gray-500 text-sm">Produção</p>
-          </div>
-
-          <div class="bg-white border border-green-100 rounded-2xl p-4">
-            <p class="font-semibold text-gray-900">Equipe Técnica</p>
-            <p class="text-gray-500 text-sm">Operacional</p>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
+<script>
+function toggleMenu() {
+  document.getElementById('sidebar').classList.toggle('-translate-x-full');
+  document.getElementById('overlay').classList.toggle('hidden');
+}
+</script>
 
 </body>
 </html>

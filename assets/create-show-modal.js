@@ -3,6 +3,18 @@ import { supabase } from './supabase.js'
 let editingId = null
 let editingOriginalShow = null
 
+async function getUser() {
+  const { data, error } = await supabase.auth.getUser()
+
+  if (error || !data.user) {
+    alert('Você precisa estar logado')
+    window.location.href = 'login.html'
+    return null
+  }
+
+  return data.user
+}
+
 document.getElementById("create-show-modal-container").innerHTML = `
   <div id="createShowModal" class="fixed inset-0 hidden z-[70]">
     <div id="modalBackdrop" class="absolute inset-0 bg-black/45"></div>
@@ -157,11 +169,15 @@ async function saveShow() {
     return
   }
 
+  const user = await getUser()
+  if (!user) return
+
   let error = null
 
   if (editingId) {
     const updatedShow = {
       id: editingId,
+      user_id: user.id,
       data,
       horario,
       cidade,
@@ -194,7 +210,16 @@ async function saveShow() {
   } else {
     const res = await supabase
       .from('shows')
-      .insert([{ data, horario, cidade, estado, titulo, contratante, observacoes }])
+      .insert([{
+        user_id: user.id,
+        data,
+        horario,
+        cidade,
+        estado,
+        titulo,
+        contratante,
+        observacoes
+      }])
       .select()
       .single()
 
@@ -219,6 +244,9 @@ async function deleteCurrentShow() {
 
   const confirmar = confirm('Excluir essa data?')
   if (!confirmar) return
+
+  const user = await getUser()
+  if (!user) return
 
   const { error } = await supabase
     .from('shows')

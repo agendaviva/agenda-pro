@@ -12,61 +12,27 @@ async function getUser() {
   return data.user
 }
 
-function formatShowTime(horario) {
-  return horario && horario.trim() ? horario : ''
-}
-
 function renderShowCard(show) {
   const el = document.createElement('div')
 
   el.className =
-    'bg-white border rounded-xl p-2 mt-2 text-sm flex justify-between items-start cursor-pointer hover:bg-green-50 transition'
+    'bg-white border rounded-xl p-2 mt-2 text-sm cursor-pointer hover:bg-green-50 transition'
 
   el.dataset.showId = show.id
 
   el.innerHTML = `
     <div>
       <p class="font-semibold text-gray-900">
-  ${show.horario ? `${show.horario} • ` : ''}${show.cidade || ''}${show.estado ? `/${show.estado}` : ''}
-</p>
+        ${show.horario ? `${show.horario} • ` : ''}${show.cidade || ''}${show.estado ? `/${show.estado}` : ''}
+      </p>
       <p class="text-xs text-gray-500 mt-1">
         ${show.titulo || ''}
       </p>
     </div>
-
-    <button class="delete-btn text-red-500 hover:text-red-700 text-lg font-bold ml-2">
-      🗑️
-    </button>
   `
 
   el.addEventListener('click', () => {
     window.openCreateShowModal(null, show)
-  })
-
-  const deleteBtn = el.querySelector('.delete-btn')
-
-  deleteBtn.addEventListener('click', async (e) => {
-    e.stopPropagation()
-
-    const confirmar = confirm('Excluir esse show?')
-    if (!confirmar) return
-
-    const user = await getUser()
-    if (!user) return
-
-    const { error } = await supabase
-      .from('shows')
-      .delete()
-      .eq('id', show.id)
-      .eq('user_id', user.id)
-
-    if (error) {
-      alert('Erro ao excluir')
-      return
-    }
-
-    removeShowFromCalendar(show.id, show.data)
-    window.dispatchEvent(new CustomEvent('showsChanged'))
   })
 
   return el

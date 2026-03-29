@@ -211,4 +211,5 @@ async function loadDashboard() {
 
 window.addEventListener('showsChanged', loadDashboard)
 
+setupUserMenu()
 loadDashboard()

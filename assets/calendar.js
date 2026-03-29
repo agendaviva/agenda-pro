@@ -24,19 +24,14 @@ async function loadCurrentUserRole() {
   const activeProjectId = getActiveProjectId()
   if (!activeProjectId) return null
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('project_members')
     .select('role')
     .eq('project_id', activeProjectId)
     .eq('user_id', user.id)
     .single()
 
-  if (error || !data) {
-    currentUserRole = null
-    return null
-  }
-
-  currentUserRole = data.role || null
+  currentUserRole = data?.role || null
   return currentUserRole
 }
 
@@ -74,25 +69,23 @@ function getStatusMeta(status) {
   if (status === 'confirmado') {
     return {
       label: 'Confirmado',
-      cardClass: 'border-green-200 bg-green-50',
-      badgeClass: 'bg-green-100 text-green-700 border border-green-200',
-      textClass: 'text-green-700',
-      dotClass: 'bg-green-500'
+      card: 'bg-green-50 border-green-200',
+      badge: 'bg-green-100 text-green-700 border-green-200',
+      dot: 'bg-green-500'
     }
   }
 
   return {
     label: 'Reserva',
-    cardClass: 'border-amber-200 bg-amber-50',
-    badgeClass: 'bg-amber-100 text-amber-700 border border-amber-200',
-    textClass: 'text-amber-700',
-    dotClass: 'bg-amber-500'
+    card: 'bg-yellow-50 border-yellow-200',
+    badge: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    dot: 'bg-yellow-500'
   }
 }
 
 function renderEmptyState(container) {
   container.innerHTML = `
-    <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-3 py-4 text-center text-sm text-gray-400">
+    <div class="text-sm text-gray-400 text-center mt-4">
       Sem eventos
     </div>
   `
@@ -100,72 +93,53 @@ function renderEmptyState(container) {
 
 function renderShowCard(show) {
   const meta = getStatusMeta(show.status)
+
   const titulo = escapeHtml(show.titulo || 'Sem título')
-  const horario = escapeHtml(show.horario || 'Sem horário')
+  const horario = escapeHtml(show.horario || '--:--')
   const cidade = escapeHtml(show.cidade || '')
   const estado = escapeHtml(show.estado || '')
-  const contratante = escapeHtml(show.contratante || '')
-  const local = cidade ? `${cidade}${estado ? `/${estado}` : ''}` : 'Cidade não definida'
 
-  const el = document.createElement('button')
-  el.type = 'button'
-  el.dataset.showId = show.id
-  el.className = `w-full text-left rounded-2xl border p-3 mt-2 transition hover:shadow-sm ${meta.cardClass}`
+  const local = cidade
+    ? `${cidade}${estado ? `/${estado}` : ''}`
+    : 'Local não definido'
+
+  const el = document.createElement('div')
+
+  el.className = `
+    rounded-2xl border p-3 mt-2 cursor-pointer
+    transition hover:scale-[1.02] hover:shadow-sm
+    ${meta.card}
+  `
 
   el.innerHTML = `
-    <div class="flex items-start justify-between gap-2 mb-2">
+    <div class="flex justify-between items-start mb-2">
       <div class="min-w-0">
         <p class="font-semibold text-gray-900 truncate">${titulo}</p>
-        <p class="text-xs text-gray-600 mt-1">${horario}</p>
+        <p class="text-xs text-gray-600">${horario}</p>
       </div>
 
-      <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold ${meta.badgeClass}">
-        <span class="w-2 h-2 rounded-full ${meta.dotClass}"></span>
+      <span class="flex items-center gap-1 px-2 py-1 text-[11px] rounded-xl border ${meta.badge}">
+        <span class="w-2 h-2 rounded-full ${meta.dot}"></span>
         ${meta.label}
       </span>
     </div>
 
     <p class="text-sm text-gray-700 truncate">${local}</p>
-
-    <p class="text-xs text-gray-500 mt-1 truncate">
-      ${contratante ? `Contratante: ${contratante}` : 'Sem contratante'}
-    </p>
-
-    <p class="text-xs font-semibold mt-2 ${meta.textClass}">
-      ${meta.label}
-    </p>
   `
 
-  el.addEventListener('click', () => {
+  el.onclick = () => {
     if (window.openCreateShowModal) {
       window.openCreateShowModal(null, show)
     }
-  })
+  }
 
   return el
 }
 
-function getDayContainerByDate(date) {
-  const cleanDate = normalizeDate(date)
-  const day = document.querySelector(`[data-date="${cleanDate}"]`)
-  if (!day) return null
-  return day.querySelector('.events-container')
-}
-
-function addShowToCalendar(show) {
-  const container = getDayContainerByDate(show.data)
-  if (!container) return
-  loadShows()
-}
-
-function removeShowFromCalendar(showId, date) {
-  const container = getDayContainerByDate(date)
-  if (!container) return
-  loadShows()
-}
-
-function updateShowInCalendar(oldShow, updatedShow) {
-  loadShows()
+function getContainer(date) {
+  const clean = normalizeDate(date)
+  const day = document.querySelector(`[data-date="${clean}"]`)
+  return day?.querySelector('.events-container') || null
 }
 
 async function loadShows() {
@@ -187,10 +161,11 @@ async function loadShows() {
     .eq('project_id', activeProjectId)
 
   if (error) {
-    console.error('Erro ao buscar shows:', error)
+    console.error(error)
     return
   }
 
+  // limpa tudo
   document.querySelectorAll('.events-container').forEach(container => {
     container.innerHTML = ''
     renderEmptyState(container)
@@ -205,7 +180,7 @@ async function loadShows() {
   })
 
   Object.keys(grouped).forEach(date => {
-    const container = getDayContainerByDate(date)
+    const container = getContainer(date)
     if (!container) return
 
     container.innerHTML = ''
@@ -216,15 +191,19 @@ async function loadShows() {
   })
 }
 
+/* ===== EVENTO PRINCIPAL (CORREÇÃO DO BUG) ===== */
+document.addEventListener('calendar:rendered', () => {
+  loadShows()
+})
+
+/* ===== LISTENERS ===== */
+window.addEventListener('showsChanged', loadShows)
+
+/* ===== EXPORTS ===== */
 window.loadShows = loadShows
-window.addShowToCalendar = addShowToCalendar
-window.removeShowFromCalendar = removeShowFromCalendar
-window.updateShowInCalendar = updateShowInCalendar
 window.canManageAgenda = canManageAgenda
 window.loadCurrentUserRole = loadCurrentUserRole
 
-window.addEventListener('showsChanged', loadShows)
-
-setTimeout(() => {
-  loadShows()
-}, 0)
+window.addShowToCalendar = loadShows
+window.removeShowFromCalendar = loadShows
+window.updateShowInCalendar = loadShows

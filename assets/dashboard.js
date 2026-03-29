@@ -12,6 +12,11 @@ async function getUser() {
   return data.user
 }
 
+// 📁 PROJETO ATIVO
+function getActiveProjectId() {
+  return localStorage.getItem('activeProjectId')
+}
+
 // 👋 BOAS-VINDAS
 async function setWelcomeUser() {
   const { data } = await supabase.auth.getUser()
@@ -124,6 +129,10 @@ function updateSummary(shows) {
 
     document.getElementById('nextShowTitle').textContent =
       next.titulo || 'Sem título'
+  } else {
+    document.getElementById('nextShowDate').textContent = '—'
+    document.getElementById('nextShowCity').textContent = '—'
+    document.getElementById('nextShowTitle').textContent = '—'
   }
 
   renderUpcomingShows(upcomingShows.slice(0, 5))
@@ -136,10 +145,23 @@ async function loadDashboard() {
 
   await setWelcomeUser()
 
-  const { data: shows } = await supabase
+  const activeProjectId = getActiveProjectId()
+
+  if (!activeProjectId) {
+    updateSummary([])
+    return
+  }
+
+  const { data: shows, error } = await supabase
     .from('shows')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('project_id', activeProjectId)
+
+  if (error) {
+    console.error('Erro ao carregar shows do dashboard:', error)
+    updateSummary([])
+    return
+  }
 
   updateSummary(shows || [])
 }

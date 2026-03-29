@@ -1,5 +1,7 @@
 import { supabase } from './supabase.js'
 
+let currentUserRole = null
+
 function getActiveProjectId() {
   return localStorage.getItem('activeProjectId')
 }
@@ -14,6 +16,33 @@ async function getUser() {
   }
 
   return data.user
+}
+
+async function loadCurrentUserRole() {
+  const user = await getUser()
+  if (!user) return null
+
+  const activeProjectId = getActiveProjectId()
+  if (!activeProjectId) return null
+
+  const { data, error } = await supabase
+    .from('project_members')
+    .select('role')
+    .eq('project_id', activeProjectId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (error || !data) {
+    currentUserRole = null
+    return null
+  }
+
+  currentUserRole = data.role || null
+  return currentUserRole
+}
+
+function canManageAgenda() {
+  return currentUserRole === 'admin' || currentUserRole === 'editor'
 }
 
 function renderShowCard(show) {
@@ -36,7 +65,9 @@ function renderShowCard(show) {
   `
 
   el.addEventListener('click', () => {
-    window.openCreateShowModal(null, show)
+    if (window.openCreateShowModal) {
+      window.openCreateShowModal(null, show)
+    }
   })
 
   return el
@@ -101,6 +132,8 @@ async function loadShows() {
   const user = await getUser()
   if (!user) return
 
+  await loadCurrentUserRole()
+
   const activeProjectId = getActiveProjectId()
 
   if (!activeProjectId) {
@@ -149,5 +182,7 @@ window.loadShows = loadShows
 window.addShowToCalendar = addShowToCalendar
 window.removeShowFromCalendar = removeShowFromCalendar
 window.updateShowInCalendar = updateShowInCalendar
+window.canManageAgenda = canManageAgenda
+window.loadCurrentUserRole = loadCurrentUserRole
 
 loadShows()

@@ -18,6 +18,7 @@
 
       <nav class="space-y-3">
         <a href="#" class="block bg-green-500 text-black font-semibold px-4 py-3 rounded-xl">Dashboard</a>
+        <a href="#" class="block text-gray-300 hover:bg-gray-900 px-4 py-3 rounded-xl">Calendário</a>
         <a href="#" class="block text-gray-300 hover:bg-gray-900 px-4 py-3 rounded-xl">Shows</a>
         <a href="#" class="block text-gray-300 hover:bg-gray-900 px-4 py-3 rounded-xl">Equipe</a>
         <a href="#" class="block text-gray-300 hover:bg-gray-900 px-4 py-3 rounded-xl">Mensagens</a>
@@ -38,21 +39,44 @@
         </button>
       </div>
 
-      <!-- Stats -->
-      <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800">
-          <p class="text-gray-400 text-sm mb-2">Shows este mês</p>
-          <h3 class="text-4xl font-bold">12</h3>
-        </div>
+      <!-- CALENDÁRIO -->
+      <section class="bg-gray-900 rounded-2xl p-6 border border-gray-800 mb-8">
+        <h3 class="text-2xl font-bold mb-6">Calendário</h3>
 
-        <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800">
-          <p class="text-gray-400 text-sm mb-2">Usuários no plano</p>
-          <h3 class="text-4xl font-bold">3</h3>
-        </div>
+        <div class="grid grid-cols-7 gap-2 text-center text-sm">
+          <!-- Dias da semana -->
+          <div class="text-gray-400">Dom</div>
+          <div class="text-gray-400">Seg</div>
+          <div class="text-gray-400">Ter</div>
+          <div class="text-gray-400">Qua</div>
+          <div class="text-gray-400">Qui</div>
+          <div class="text-gray-400">Sex</div>
+          <div class="text-gray-400">Sáb</div>
 
-        <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800">
-          <p class="text-gray-400 text-sm mb-2">Mensagens enviadas</p>
-          <h3 class="text-4xl font-bold">84</h3>
+          <!-- Dias (simples mock) -->
+          <div class="p-3 bg-black rounded">1</div>
+          <div class="p-3 bg-black rounded">2</div>
+          <div class="p-3 bg-black rounded">3</div>
+          <div class="p-3 bg-black rounded">4</div>
+          <div class="p-3 bg-black rounded">5</div>
+          <div class="p-3 bg-black rounded">6</div>
+          <div class="p-3 bg-black rounded">7</div>
+
+          <div class="p-3 bg-black rounded">8</div>
+          <div class="p-3 bg-black rounded">9</div>
+          <div class="p-3 bg-green-500 text-black rounded font-bold">10 🎤</div>
+          <div class="p-3 bg-black rounded">11</div>
+          <div class="p-3 bg-black rounded">12</div>
+          <div class="p-3 bg-black rounded">13</div>
+          <div class="p-3 bg-green-500 text-black rounded font-bold">14 🎤</div>
+
+          <div class="p-3 bg-black rounded">15</div>
+          <div class="p-3 bg-black rounded">16</div>
+          <div class="p-3 bg-black rounded">17</div>
+          <div class="p-3 bg-black rounded">18</div>
+          <div class="p-3 bg-green-500 text-black rounded font-bold">19 🎤</div>
+          <div class="p-3 bg-black rounded">20</div>
+          <div class="p-3 bg-black rounded">21</div>
         </div>
       </section>
 
@@ -64,58 +88,16 @@
         </div>
 
         <div class="space-y-4">
-          <div class="bg-black border border-gray-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div class="bg-black border border-gray-800 rounded-2xl p-4 flex justify-between">
             <div>
-              <p class="font-semibold text-lg">23/04 - Almadina/BA</p>
-              <p class="text-gray-400">Vaquejada do Parque</p>
+              <p class="font-semibold">23/04 - Almadina/BA</p>
+              <p class="text-gray-400 text-sm">Vaquejada</p>
             </div>
-            <span class="bg-green-500/20 text-green-400 px-4 py-2 rounded-xl text-sm">Confirmado</span>
-          </div>
-
-          <div class="bg-black border border-gray-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <p class="font-semibold text-lg">25/04 - Itabuna/BA</p>
-              <p class="text-gray-400">Aniversário da Cidade</p>
-            </div>
-            <span class="bg-yellow-500/20 text-yellow-400 px-4 py-2 rounded-xl text-sm">Pendente</span>
-          </div>
-
-          <div class="bg-black border border-gray-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <p class="font-semibold text-lg">28/04 - Ilhéus/BA</p>
-              <p class="text-gray-400">Festival de Arrocha</p>
-            </div>
-            <span class="bg-blue-500/20 text-blue-400 px-4 py-2 rounded-xl text-sm">Agendado</span>
+            <span class="text-green-400">Confirmado</span>
           </div>
         </div>
       </section>
 
-      <!-- Equipe -->
-      <section class="bg-gray-900 rounded-2xl p-6 border border-gray-800">
-        <div class="flex items-center justify-between mb-5">
-          <h3 class="text-2xl font-bold">Usuários da Equipe</h3>
-          <button class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl text-sm">
-            + Adicionar usuário
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-black border border-gray-800 rounded-2xl p-4">
-            <p class="font-semibold">Felipe</p>
-            <p class="text-gray-400 text-sm">Administrador</p>
-          </div>
-
-          <div class="bg-black border border-gray-800 rounded-2xl p-4">
-            <p class="font-semibold">Luiz</p>
-            <p class="text-gray-400 text-sm">Produção</p>
-          </div>
-
-          <div class="bg-black border border-gray-800 rounded-2xl p-4">
-            <p class="font-semibold">Equipe Técnica</p>
-            <p class="text-gray-400 text-sm">Operacional</p>
-          </div>
-        </div>
-      </section>
     </main>
   </div>
 

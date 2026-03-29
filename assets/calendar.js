@@ -1,5 +1,9 @@
 import { supabase } from './supabase.js'
 
+function formatShowTime(horario) {
+  return horario && horario.trim() ? horario : 'Ainda não definido'
+}
+
 function renderShowCard(show) {
   const el = document.createElement('div')
 
@@ -11,7 +15,7 @@ function renderShowCard(show) {
   el.innerHTML = `
     <div>
       <p class="font-semibold text-gray-900">
-        ${show.horario || ''} - ${show.cidade || ''}/${show.estado || ''}
+        ${formatShowTime(show.horario)} - ${show.cidade || ''}/${show.estado || ''}
       </p>
       <p class="text-xs text-gray-500 mt-1">
         ${show.titulo || ''}

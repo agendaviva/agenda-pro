@@ -90,6 +90,19 @@ function getStatusMeta(status) {
   }
 }
 
+function formatCurrencyBRL(value) {
+  if (value === null || value === undefined || value === '') return null
+
+  const numberValue = Number(value)
+
+  if (Number.isNaN(numberValue)) return null
+
+  return numberValue.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  })
+}
+
 function renderEmptyState(container) {
   container.innerHTML = `
     <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-3 py-4 text-center text-sm text-gray-400">
@@ -106,6 +119,7 @@ function renderShowCard(show) {
   const estado = escapeHtml(show.estado || '')
   const contratante = escapeHtml(show.contratante || '')
   const local = cidade ? `${cidade}${estado ? `/${estado}` : ''}` : 'Cidade não definida'
+  const valorFormatado = formatCurrencyBRL(show.valor)
 
   const el = document.createElement('button')
   el.type = 'button'
@@ -119,10 +133,22 @@ function renderShowCard(show) {
         <p class="text-xs text-gray-600 mt-1">${horario}</p>
       </div>
 
-      <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold ${meta.badgeClass}">
-        <span class="w-2 h-2 rounded-full ${meta.dotClass}"></span>
-        ${meta.label}
-      </span>
+      <div class="shrink-0 flex flex-col items-end gap-1">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold ${meta.badgeClass}">
+          <span class="w-2 h-2 rounded-full ${meta.dotClass}"></span>
+          ${meta.label}
+        </span>
+
+        ${
+          valorFormatado
+            ? `
+              <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-white/80 text-gray-700 border border-gray-200">
+                ${valorFormatado}
+              </span>
+            `
+            : ''
+        }
+      </div>
     </div>
 
     <p class="text-sm text-gray-700 truncate">${local}</p>

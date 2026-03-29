@@ -95,42 +95,42 @@ function sortShows(shows) {
   })
 }
 
-// 📋 RENDER
+// 🔥 LISTA SEM BOTÃO EDITAR (CARD CLICÁVEL)
 function renderUpcomingShows(shows) {
   const list = document.getElementById('upcomingShowsList')
   if (!list) return
 
   if (!shows.length) {
-    list.innerHTML = `<div class="text-gray-400 text-sm">Nenhum próximo show encontrado.</div>`
+    list.innerHTML = `
+      <div class="text-gray-400 text-sm">
+        Nenhum próximo show encontrado.
+      </div>
+    `
     return
   }
 
   list.innerHTML = shows.map((show, index) => `
-    <div class="bg-white border border-green-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-      <div>
-        <p class="font-semibold text-lg text-gray-900">
-          ${formatDateBR(show.data)}${show.horario ? ` • ${show.horario}` : ''}
-        </p>
-        <p class="text-gray-700">
-          ${show.cidade || 'Cidade não definida'}${show.estado ? `/${show.estado}` : ''}
-        </p>
-        <p class="text-gray-500 text-sm">
-          ${show.titulo || 'Sem título'}
-        </p>
-      </div>
+    <div 
+      class="bg-white border border-green-100 rounded-2xl p-4 flex flex-col gap-2 cursor-pointer hover:bg-green-50 transition"
+      data-index="${index}"
+    >
+      <p class="font-semibold text-lg text-gray-900">
+        ${formatDateBR(show.data)}${show.horario ? ` • ${show.horario}` : ''}
+      </p>
 
-      <button
-        class="edit-show-btn bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-xl text-sm"
-        data-index="${index}"
-      >
-        Editar
-      </button>
+      <p class="text-gray-700">
+        ${show.cidade || 'Cidade não definida'}${show.estado ? `/${show.estado}` : ''}
+      </p>
+
+      <p class="text-gray-500 text-sm">
+        ${show.titulo || 'Sem título'}
+      </p>
     </div>
   `).join('')
 
-  list.querySelectorAll('.edit-show-btn').forEach(button => {
-    button.addEventListener('click', () => {
-      const index = Number(button.dataset.index)
+  list.querySelectorAll('[data-index]').forEach(el => {
+    el.addEventListener('click', () => {
+      const index = Number(el.dataset.index)
       window.openCreateShowModal(null, shows[index])
     })
   })
@@ -195,7 +195,7 @@ async function loadDashboard() {
 // 🔁 EVENT
 window.addEventListener('showsChanged', loadDashboard)
 
-// 🔥 ANTI-CRASH (IMPORTANTE)
+// 🔥 ANTI-CRASH
 window.addEventListener('DOMContentLoaded', () => {
   setupUserMenu()
   loadDashboard()

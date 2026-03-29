@@ -9,9 +9,9 @@ function getActiveProjectId() {
 }
 
 async function getUser() {
-  const { data } = await supabase.auth.getUser()
+  const { data, error } = await supabase.auth.getUser()
 
-  if (!data.user) {
+  if (error || !data.user) {
     window.location.href = 'login.html'
     return null
   }
@@ -132,8 +132,38 @@ document.getElementById('create-show-modal-container').innerHTML = `
   </div>
 `
 
-function emitShowsChanged() {
-  window.dispatchEvent(new CustomEvent('showsChanged'))
+function getModal() {
+  return document.getElementById('createShowModal')
+}
+
+function resetModalState() {
+  editingId = null
+  editingOriginalShow = null
+
+  document.getElementById('showDate').value = ''
+  document.getElementById('showTime').value = ''
+  document.getElementById('showCity').value = ''
+  document.getElementById('showState').value = ''
+  document.getElementById('showTitle').value = ''
+  document.getElementById('showContractor').value = ''
+  document.getElementById('showNotes').value = ''
+
+  document.getElementById('deleteShowBtn').classList.add('hidden')
+  document.getElementById('saveShowBtn').classList.remove('hidden')
+  document.getElementById('modalSubtitle').textContent = 'Gerencie os dados do show'
+  document.getElementById('modalTitle').textContent = 'Novo show'
+
+  setReadOnlyMode(false)
+}
+
+function fillForm(show = null, date = '') {
+  document.getElementById('showDate').value = show?.data || date || ''
+  document.getElementById('showTime').value = show?.horario || ''
+  document.getElementById('showCity').value = show?.cidade || ''
+  document.getElementById('showState').value = show?.estado || ''
+  document.getElementById('showTitle').value = show?.titulo || ''
+  document.getElementById('showContractor').value = show?.contratante || ''
+  document.getElementById('showNotes').value = show?.observacoes || ''
 }
 
 function setReadOnlyMode(readOnly) {
@@ -150,6 +180,7 @@ function setReadOnlyMode(readOnly) {
   fields.forEach(id => {
     const el = document.getElementById(id)
     if (!el) return
+
     el.disabled = readOnly
 
     if (readOnly) {
@@ -159,71 +190,61 @@ function setReadOnlyMode(readOnly) {
     }
   })
 
-  const saveBtn = document.getElementById('saveShowBtn')
-  const deleteBtn = document.getElementById('deleteShowBtn')
-  const subtitle = document.getElementById('modalSubtitle')
-
-  if (saveBtn) saveBtn.classList.toggle('hidden', readOnly)
-  if (deleteBtn) deleteBtn.classList.toggle('hidden', readOnly || !editingId)
-
-  if (subtitle) {
-    subtitle.textContent = readOnly
-      ? 'Modo visualização'
-      : 'Gerencie os dados do show'
-  }
+  document.getElementById('saveShowBtn').classList.toggle('hidden', readOnly)
+  document.getElementById('deleteShowBtn').classList.toggle('hidden', readOnly || !editingId)
+  document.getElementById('modalSubtitle').textContent = readOnly
+    ? 'Modo visualização'
+    : 'Gerencie os dados do show'
 }
 
-function fillForm(show = null, date = '') {
-  document.getElementById('showDate').value = show?.data || date || ''
-  document.getElementById('showTime').value = show?.horario || ''
-  document.getElementById('showCity').value = show?.cidade || ''
-  document.getElementById('showState').value = show?.estado || ''
-  document.getElementById('showTitle').value = show?.titulo || ''
-  document.getElementById('showContractor').value = show?.contratante || ''
-  document.getElementById('showNotes').value = show?.observacoes || ''
-}
-
-function closeCreateShowModal() {
-  const modal = document.getElementById('createShowModal')
-  if (modal) modal.classList.add('hidden')
-  document.body.classList.remove('overflow-hidden')
-}
-
-async function openCreateShowModal(date = '', show = null) {
-  await loadCurrentUserRole()
-
-  const modal = document.getElementById('createShowModal')
-  const title = document.getElementById('modalTitle')
-  const deleteBtn = document.getElementById('deleteShowBtn')
-
-  if (!show && !canManageAgenda()) {
-    alert('Você só pode visualizar a agenda.')
-    closeCreateShowModal()
-    return
-  }
-
-  if (show) {
-    editingId = show.id
-    editingOriginalShow = { ...show }
-    title.innerText = canManageAgenda() ? 'Editar show' : 'Detalhes do show'
-    fillForm(show)
-    if (canManageAgenda()) deleteBtn.classList.remove('hidden')
-    else deleteBtn.classList.add('hidden')
-  } else {
-    editingId = null
-    editingOriginalShow = null
-    title.innerText = 'Novo show'
-    deleteBtn.classList.add('hidden')
-    fillForm(null, date)
-  }
-
-  setReadOnlyMode(!canManageAgenda())
-
+function showModal() {
+  const modal = getModal()
   modal.classList.remove('hidden')
   document.body.classList.add('overflow-hidden')
 }
 
-document.addEventListener('click', function (event) {
+function closeCreateShowModal() {
+  const modal = getModal()
+  modal.classList.add('hidden')
+  document.body.classList.remove('overflow-hidden')
+  resetModalState()
+}
+
+function emitShowsChanged() {
+  window.dispatchEvent(new CustomEvent('showsChanged'))
+}
+
+async function openCreateShowModal(date = '', show = null) {
+  closeCreateShowModal()
+  await loadCurrentUserRole()
+
+  if (!show && !canManageAgenda()) {
+    alert('Você só pode visualizar a agenda.')
+    return
+  }
+
+  resetModalState()
+
+  if (show) {
+    editingId = show.id
+    editingOriginalShow = { ...show }
+    fillForm(show)
+
+    document.getElementById('modalTitle').textContent = canManageAgenda()
+      ? 'Editar show'
+      : 'Detalhes do show'
+
+    setReadOnlyMode(!canManageAgenda())
+  } else {
+    fillForm(null, date)
+    document.getElementById('modalTitle').textContent = 'Novo show'
+    setReadOnlyMode(false)
+  }
+
+  showModal()
+}
+
+document.addEventListener('click', (event) => {
   const backdrop = document.getElementById('modalBackdrop')
   if (backdrop && event.target === backdrop) {
     closeCreateShowModal()
@@ -234,8 +255,8 @@ async function saveShow() {
   await loadCurrentUserRole()
 
   if (!canManageAgenda()) {
-    alert('Você não tem permissão para alterar a agenda.')
     closeCreateShowModal()
+    alert('Você não tem permissão para alterar a agenda.')
     return
   }
 
@@ -310,7 +331,6 @@ async function saveShow() {
 
   if (error) {
     alert('Erro ao salvar')
-    console.error(error)
     return
   }
 
@@ -322,8 +342,8 @@ async function deleteCurrentShow() {
   await loadCurrentUserRole()
 
   if (!canManageAgenda()) {
-    alert('Você não tem permissão para excluir.')
     closeCreateShowModal()
+    alert('Você não tem permissão para excluir.')
     return
   }
 

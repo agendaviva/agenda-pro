@@ -2,6 +2,7 @@ import { supabase } from './supabase.js'
 
 let currentUserRole = null
 let isLoadingShows = false
+let initialBootDone = false
 
 function getActiveProjectId() {
   return localStorage.getItem('activeProjectId')
@@ -28,14 +29,19 @@ async function loadCurrentUserRole() {
     return null
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('project_members')
     .select('role')
     .eq('project_id', activeProjectId)
     .eq('user_id', user.id)
     .single()
 
-  currentUserRole = data?.role || null
+  if (error || !data) {
+    currentUserRole = null
+    return null
+  }
+
+  currentUserRole = data.role || null
   return currentUserRole
 }
 
@@ -73,17 +79,19 @@ function getStatusMeta(status) {
   if (status === 'confirmado') {
     return {
       label: 'Confirmado',
-      card: 'bg-green-50 border-green-200',
-      badge: 'bg-green-100 text-green-700 border-green-200',
-      dot: 'bg-green-500'
+      cardClass: 'border-green-200 bg-green-50',
+      badgeClass: 'bg-green-100 text-green-700 border border-green-200',
+      dotClass: 'bg-green-500',
+      statusTextClass: 'text-green-700'
     }
   }
 
   return {
     label: 'Reserva',
-    card: 'bg-yellow-50 border-yellow-200',
-    badge: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    dot: 'bg-yellow-500'
+    cardClass: 'border-amber-200 bg-amber-50',
+    badgeClass: 'bg-amber-100 text-amber-700 border border-amber-200',
+    dotClass: 'bg-amber-500',
+    statusTextClass: 'text-amber-700'
   }
 }
 
@@ -111,21 +119,17 @@ function renderShowCard(show) {
   const el = document.createElement('button')
   el.type = 'button'
   el.dataset.showId = show.id
-  el.className = `
-    w-full text-left rounded-2xl border p-3 mt-2
-    transition hover:scale-[1.01] hover:shadow-sm
-    ${meta.card}
-  `
+  el.className = `w-full text-left rounded-2xl border p-3 mt-2 transition hover:scale-[1.01] hover:shadow-sm ${meta.cardClass}`
 
   el.innerHTML = `
-    <div class="flex justify-between items-start gap-2 mb-2">
+    <div class="flex items-start justify-between gap-2 mb-2">
       <div class="min-w-0">
         <p class="font-semibold text-gray-900 truncate">${titulo}</p>
         <p class="text-xs text-gray-600 mt-1">${horario}</p>
       </div>
 
-      <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold border ${meta.badge}">
-        <span class="w-2 h-2 rounded-full ${meta.dot}"></span>
+      <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold ${meta.badgeClass}">
+        <span class="w-2 h-2 rounded-full ${meta.dotClass}"></span>
         ${meta.label}
       </span>
     </div>
@@ -134,6 +138,10 @@ function renderShowCard(show) {
 
     <p class="text-xs text-gray-500 mt-1 truncate">
       ${contratante ? `Contratante: ${contratante}` : 'Sem contratante'}
+    </p>
+
+    <p class="text-xs font-semibold mt-2 ${meta.statusTextClass}">
+      ${meta.label}
     </p>
   `
 
@@ -146,17 +154,22 @@ function renderShowCard(show) {
   return el
 }
 
-function getContainer(date) {
+function getDayContainerByDate(date) {
   const cleanDate = normalizeDate(date)
   const day = document.querySelector(`[data-date="${cleanDate}"]`)
   if (!day) return null
   return day.querySelector('.events-container')
 }
 
-function clearAllDays() {
+function clearCalendarDays() {
   document.querySelectorAll('.events-container').forEach(container => {
+    container.innerHTML = ''
     renderEmptyState(container)
   })
+}
+
+function calendarIsReady() {
+  return document.querySelectorAll('[data-date]').length > 0
 }
 
 async function loadShows() {
@@ -172,7 +185,11 @@ async function loadShows() {
     const activeProjectId = getActiveProjectId()
 
     if (!activeProjectId) {
-      clearAllDays()
+      clearCalendarDays()
+      return
+    }
+
+    if (!calendarIsReady()) {
       return
     }
 
@@ -183,14 +200,11 @@ async function loadShows() {
 
     if (error) {
       console.error('Erro ao buscar shows:', error)
-      clearAllDays()
+      clearCalendarDays()
       return
     }
 
-    document.querySelectorAll('.events-container').forEach(container => {
-      container.innerHTML = ''
-      renderEmptyState(container)
-    })
+    clearCalendarDays()
 
     const grouped = {}
 
@@ -201,7 +215,7 @@ async function loadShows() {
     })
 
     Object.keys(grouped).forEach(date => {
-      const container = getContainer(date)
+      const container = getDayContainerByDate(date)
       if (!container) return
 
       container.innerHTML = ''
@@ -215,21 +229,38 @@ async function loadShows() {
   }
 }
 
-function calendarAlreadyRendered() {
-  return document.querySelectorAll('[data-date]').length > 0
+function bootInitialLoad() {
+  if (initialBootDone) return
+  initialBootDone = true
+
+  let attempts = 0
+  const maxAttempts = 20
+
+  const interval = setInterval(async () => {
+    attempts++
+
+    if (calendarIsReady()) {
+      await loadShows()
+      clearInterval(interval)
+      return
+    }
+
+    if (attempts >= maxAttempts) {
+      clearInterval(interval)
+    }
+  }, 200)
 }
 
-function bootCalendarShows() {
-  if (calendarAlreadyRendered()) {
-    loadShows()
-    return
-  }
+function addShowToCalendar() {
+  loadShows()
+}
 
-  requestAnimationFrame(() => {
-    if (calendarAlreadyRendered()) {
-      loadShows()
-    }
-  })
+function removeShowFromCalendar() {
+  loadShows()
+}
+
+function updateShowInCalendar() {
+  loadShows()
 }
 
 document.addEventListener('calendar:rendered', () => {
@@ -247,14 +278,24 @@ window.addEventListener('storage', e => {
 })
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', bootCalendarShows)
+  document.addEventListener('DOMContentLoaded', () => {
+    bootInitialLoad()
+  })
 } else {
-  bootCalendarShows()
+  bootInitialLoad()
 }
 
+setTimeout(() => {
+  loadShows()
+}, 300)
+
+setTimeout(() => {
+  loadShows()
+}, 800)
+
 window.loadShows = loadShows
+window.addShowToCalendar = addShowToCalendar
+window.removeShowFromCalendar = removeShowFromCalendar
+window.updateShowInCalendar = updateShowInCalendar
 window.canManageAgenda = canManageAgenda
 window.loadCurrentUserRole = loadCurrentUserRole
-window.addShowToCalendar = loadShows
-window.removeShowFromCalendar = loadShows
-window.updateShowInCalendar = loadShows

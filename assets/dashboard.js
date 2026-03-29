@@ -1,5 +1,17 @@
 import { supabase } from './supabase.js'
 
+async function getUser() {
+  const { data, error } = await supabase.auth.getUser()
+
+  if (error || !data.user) {
+    alert('Você precisa estar logado')
+    window.location.href = 'login.html'
+    return null
+  }
+
+  return data.user
+}
+
 function formatDateBR(dateString) {
   const [year, month, day] = String(dateString).split('T')[0].split('-')
   return `${day}/${month}/${year}`
@@ -119,9 +131,13 @@ function updateSummary(shows) {
 }
 
 async function loadDashboard() {
+  const user = await getUser()
+  if (!user) return
+
   const { data: shows, error } = await supabase
     .from('shows')
     .select('*')
+    .eq('user_id', user.id)
 
   if (error) {
     document.getElementById('upcomingShowsList').innerHTML = `

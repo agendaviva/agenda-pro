@@ -1,82 +1,65 @@
 import { supabase } from './supabase.js'
 
+// 🔥 controle de edição
+let editingId = null
+
 document.getElementById("create-show-modal-container").innerHTML = `
   <div id="createShowModal" class="fixed inset-0 hidden z-[70]">
     <div id="modalBackdrop" class="absolute inset-0 bg-black/45"></div>
 
     <div class="relative z-10 h-full w-full overflow-y-auto">
       <div class="min-h-full flex items-start md:items-center justify-center p-3 md:p-6">
-        <div id="modalBox" class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-green-100 my-4 md:my-8 max-h-[92vh] flex flex-col">
+        <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-green-100 my-4 md:my-8 max-h-[92vh] flex flex-col">
           
-          <div class="flex items-center justify-between px-5 md:px-6 py-4 border-b border-gray-100 shrink-0">
-            <h3 class="text-2xl md:text-3xl font-light text-gray-700">Novo lançamento</h3>
-            <button onclick="attemptCloseModal()" class="text-3xl text-gray-400 hover:text-gray-700 leading-none">&times;</button>
+          <div class="flex items-center justify-between px-5 py-4 border-b">
+            <h3 id="modalTitle" class="text-2xl font-light text-gray-700">Novo show</h3>
+            <button onclick="attemptCloseModal()" class="text-3xl text-gray-400">&times;</button>
           </div>
 
-          <div class="overflow-y-auto px-5 md:px-8 py-6 md:py-8">
-            <div class="mb-8">
-              <h2 class="text-3xl md:text-5xl font-light text-gray-500">Agenda Lux</h2>
-            </div>
-
-            <div class="w-full bg-gray-100 rounded-full h-4 overflow-hidden mb-8">
-              <div class="bg-green-500 h-4 w-1/2 flex items-center justify-center text-white text-xs font-bold">PASSO 1</div>
-            </div>
-
-            <h4 class="text-2xl md:text-3xl font-bold text-gray-600 mb-8">INFORMAÇÕES BÁSICAS</h4>
+          <div class="overflow-y-auto px-5 py-6">
 
             <div class="grid md:grid-cols-2 gap-5">
 
-              <div class="md:col-span-2">
-                <label class="block text-base md:text-lg font-semibold text-gray-600 mb-2">Tipo de lançamento</label>
-                <select class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
-                  <option>Show</option>
-                </select>
+              <div>
+                <label>Data</label>
+                <input id="showDate" type="date" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div>
-                <label class="block text-base md:text-lg font-semibold text-gray-600 mb-2">Data</label>
-                <input id="showDate" type="date" class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
+                <label>Horário</label>
+                <input id="showTime" type="time" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div>
-                <label class="block text-base md:text-lg font-semibold text-gray-600 mb-2">Horário</label>
-                <input id="showTime" type="time" class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
+                <label>Estado</label>
+                <input id="showState" type="text" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div>
-                <label class="block text-base md:text-lg font-semibold text-gray-600 mb-2">Estado</label>
-                <select id="showState" class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
-                  <option>BA</option>
-                  <option>MG</option>
-                  <option>SP</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-base md:text-lg font-semibold text-gray-600 mb-2">Cidade</label>
-                <input id="showCity" type="text" class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
+                <label>Cidade</label>
+                <input id="showCity" type="text" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div class="md:col-span-2">
-                <label class="block text-base md:text-lg font-semibold text-gray-600 mb-2">Título</label>
-                <input id="showTitle" type="text" class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
+                <label>Título</label>
+                <input id="showTitle" type="text" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div class="md:col-span-2">
-                <label class="block text-base md:text-lg font-semibold text-gray-600 mb-2">Contratante</label>
-                <input id="showContractor" type="text" class="w-full h-14 px-4 rounded-2xl border border-gray-300 bg-white text-gray-700">
+                <label>Contratante</label>
+                <input id="showContractor" type="text" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div class="md:col-span-2">
-                <label class="block text-base md:text-lg font-semibold text-gray-600 mb-2">Informações adicionais</label>
-                <textarea id="showNotes" rows="4" class="w-full px-4 py-3 rounded-2xl border border-gray-300 bg-white text-gray-700"></textarea>
+                <label>Observações</label>
+                <textarea id="showNotes" class="w-full p-3 border rounded-xl"></textarea>
               </div>
 
             </div>
 
-            <div class="text-center mt-8">
-              <button onclick="saveShow()" class="bg-green-500 hover:bg-green-600 text-white text-xl px-10 py-4 rounded-2xl">
-                Salvar Show
+            <div class="text-center mt-6">
+              <button onclick="saveShow()" class="bg-green-500 text-white px-8 py-3 rounded-xl">
+                Salvar
               </button>
             </div>
 
@@ -88,32 +71,55 @@ document.getElementById("create-show-modal-container").innerHTML = `
   </div>
 `
 
-function openCreateShowModal(date = '') {
+// 🔥 ABRIR MODAL (CREATE ou EDIT)
+function openCreateShowModal(date = '', show = null) {
   const modal = document.getElementById('createShowModal')
-  const dateInput = document.getElementById('showDate')
 
   modal.classList.remove('hidden')
   document.body.classList.add('overflow-hidden')
 
-  if (date) {
-    dateInput.value = date
+  const title = document.getElementById('modalTitle')
+
+  if (show) {
+    // 👉 modo edição
+    editingId = show.id
+    title.innerText = 'Editar show'
+
+    document.getElementById('showDate').value = show.data
+    document.getElementById('showTime').value = show.horario
+    document.getElementById('showCity').value = show.cidade
+    document.getElementById('showState').value = show.estado
+    document.getElementById('showTitle').value = show.titulo
+    document.getElementById('showContractor').value = show.contratante
+    document.getElementById('showNotes').value = show.observacoes
+
   } else {
-    dateInput.value = ''
+    // 👉 modo criação
+    editingId = null
+    title.innerText = 'Novo show'
+
+    document.getElementById('showDate').value = date || ''
+    document.getElementById('showTime').value = ''
+    document.getElementById('showCity').value = ''
+    document.getElementById('showState').value = ''
+    document.getElementById('showTitle').value = ''
+    document.getElementById('showContractor').value = ''
+    document.getElementById('showNotes').value = ''
   }
 }
 
+// 🔥 FECHAR
 function closeCreateShowModal() {
-  const modal = document.getElementById('createShowModal')
-  modal.classList.add('hidden')
+  document.getElementById('createShowModal').classList.add('hidden')
   document.body.classList.remove('overflow-hidden')
 }
 
+// 🔥 CONFIRMAR FECHAMENTO
 function attemptCloseModal() {
-  if (confirm('Deseja cancelar?')) {
-    closeCreateShowModal()
-  }
+  if (confirm('Cancelar?')) closeCreateShowModal()
 }
 
+// 🔥 BACKDROP
 document.addEventListener('click', function (event) {
   const backdrop = document.getElementById('modalBackdrop')
   if (backdrop && event.target === backdrop) {
@@ -121,6 +127,7 @@ document.addEventListener('click', function (event) {
   }
 })
 
+// 🔥 SALVAR (CREATE ou UPDATE)
 async function saveShow() {
   const data = document.getElementById('showDate').value
   const horario = document.getElementById('showTime').value
@@ -135,22 +142,44 @@ async function saveShow() {
     return
   }
 
-  const { error } = await supabase
-    .from('shows')
-    .insert([{ data, horario, cidade, estado, titulo, contratante, observacoes }])
+  let error
+
+  if (editingId) {
+    // 🔥 UPDATE
+    const res = await supabase
+      .from('shows')
+      .update({
+        data,
+        horario,
+        cidade,
+        estado,
+        titulo,
+        contratante,
+        observacoes
+      })
+      .eq('id', editingId)
+
+    error = res.error
+
+  } else {
+    // 🔥 CREATE
+    const res = await supabase
+      .from('shows')
+      .insert([{ data, horario, cidade, estado, titulo, contratante, observacoes }])
+
+    error = res.error
+  }
 
   if (error) {
     alert('Erro ao salvar')
-    console.error(error)
     return
   }
 
-  alert('Show salvo!')
   closeCreateShowModal()
   location.reload()
 }
 
-// 🔥 DEIXAR GLOBAL (ESSENCIAL)
+// 🔥 GLOBAL
 window.openCreateShowModal = openCreateShowModal
 window.saveShow = saveShow
 window.attemptCloseModal = attemptCloseModal

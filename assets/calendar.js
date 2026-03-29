@@ -1,3 +1,5 @@
+alert('calendar rodando')
+
 import { supabase } from './supabase.js'
 
 export async function renderCalendarShows() {

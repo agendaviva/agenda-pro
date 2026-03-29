@@ -31,11 +31,13 @@ function setMessage(el, text, type = 'default') {
 }
 
 async function getUser() {
-  const { data } = await supabase.auth.getUser()
-  if (!data.user) {
+  const { data, error } = await supabase.auth.getUser()
+
+  if (error || !data.user) {
     window.location.href = 'login.html'
     return null
   }
+
   return data.user
 }
 
@@ -68,44 +70,79 @@ function isViewer() {
   return currentUserRole === 'viewer'
 }
 
+function formatDate(dateString) {
+  if (!dateString) return 'Sem data'
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return 'Sem data'
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })
+}
+
 function renderTeamList(members) {
-  if (!members?.length) {
-    teamListEl.innerHTML = `<div class="text-sm text-gray-400">Nenhum membro encontrado.</div>`
+  if (!teamListEl) return
+
+  if (!members || !members.length) {
+    teamListEl.innerHTML = `
+      <div class="text-sm text-gray-400">
+        Nenhum membro encontrado neste projeto.
+      </div>
+    `
     return
   }
 
   teamListEl.innerHTML = members.map(member => {
-    const name = member.profiles?.nome || member.profiles?.email || 'Usuário'
-    const email = member.profiles?.email || ''
-    const role = member.role
-    const isSelf = member.user_id === currentUser.id
+    const memberName =
+      member.profiles?.nome ||
+      member.profiles?.name ||
+      member.profiles?.email ||
+      'Usuário'
+
+    const memberEmail = member.profiles?.email || 'Sem e-mail'
+    const role = member.role || 'viewer'
+    const isSelf = member.user_id === currentUser?.id
     const canManage = canManageTeam() && !isSelf && role !== 'admin'
 
     return `
-    <div class="border rounded-2xl p-4 flex justify-between items-center">
-      <div>
-        <p class="font-semibold">${name}</p>
-        <p class="text-sm text-gray-500">${email}</p>
-      </div>
+      <div class="border border-green-100 rounded-2xl p-4 bg-white flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <p class="font-semibold text-gray-900">${memberName}</p>
+          <p class="text-sm text-gray-500">${memberEmail}</p>
+        </div>
 
-      <div class="flex items-center gap-2">
-        ${
-          canManage
-            ? `
-          <select data-change-role="${member.id}" class="border rounded-xl px-3 py-2">
-            <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
-            <option value="editor" ${role === 'editor' ? 'selected' : ''}>Editor</option>
-            <option value="viewer" ${role === 'viewer' ? 'selected' : ''}>Viewer</option>
-          </select>
+        <div class="flex flex-col md:flex-row md:items-center gap-3">
+          ${
+            canManage
+              ? `
+              <div class="flex flex-wrap items-center gap-2">
+                <select
+                  data-change-role="${member.id}"
+                  class="px-3 py-2 rounded-xl border border-gray-300 bg-white text-sm font-semibold outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
+                  <option value="editor" ${role === 'editor' ? 'selected' : ''}>Editor</option>
+                  <option value="viewer" ${role === 'viewer' ? 'selected' : ''}>Visualizador</option>
+                </select>
 
-          <button data-remove-member="${member.id}" class="text-red-600 font-semibold text-sm">
-            Remover
-          </button>
-          `
-            : `<span class="px-3 py-1 rounded-full text-sm ${roleBadgeClass(role)}">${formatRole(role)}</span>`
-        }
+                <button
+                  type="button"
+                  data-remove-member="${member.id}"
+                  class="px-3 py-2 rounded-xl bg-red-50 text-red-600 border border-red-200 text-sm font-semibold hover:bg-red-100 transition"
+                >
+                  Remover
+                </button>
+              </div>
+              `
+              : `
+              <span class="px-3 py-1 rounded-full text-sm font-medium ${roleBadgeClass(role)}">
+                ${formatRole(role)}
+              </span>
+              `
+          }
+        </div>
       </div>
-    </div>
     `
   }).join('')
 
@@ -113,179 +150,383 @@ function renderTeamList(members) {
 }
 
 function renderPendingInvites(invites) {
-  if (!invites?.length) {
-    pendingInvitesListEl.innerHTML = `<div class="text-sm text-gray-400">Nenhum convite pendente.</div>`
+  if (!pendingInvitesListEl) return
+
+  if (!invites || !invites.length) {
+    pendingInvitesListEl.innerHTML = `
+      <div class="text-sm text-gray-400">
+        Nenhum convite pendente no momento.
+      </div>
+    `
     return
   }
 
   pendingInvitesListEl.innerHTML = invites.map(invite => {
+    const role = invite.role || 'viewer'
+    const email = invite.email || 'Sem e-mail'
+    const canCancel = canManageTeam()
+
     return `
-    <div class="border rounded-2xl p-4 flex justify-between items-center">
-      <div>
-        <p class="font-semibold">${invite.email}</p>
-        <p class="text-sm text-gray-500">Convite pendente</p>
-      </div>
+      <div class="border border-green-100 rounded-2xl p-4 bg-white flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <p class="font-semibold text-gray-900">${email}</p>
+          <p class="text-sm text-gray-500">
+            Pendente • expira em ${formatDate(invite.expires_at)}
+          </p>
+        </div>
 
-      <div class="flex items-center gap-2">
-        <span class="px-3 py-1 rounded-full text-sm ${roleBadgeClass(invite.role)}">
-          ${formatRole(invite.role)}
-        </span>
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-full text-sm font-medium ${roleBadgeClass(role)}">
+            ${formatRole(role)}
+          </span>
 
-        ${
-          canManageTeam()
-            ? `<button data-cancel-invite="${invite.id}" class="text-red-600 text-sm font-semibold">Cancelar</button>`
-            : ''
-        }
+          ${
+            canCancel
+              ? `
+              <button
+                type="button"
+                data-cancel-invite="${invite.id}"
+                class="px-3 py-2 rounded-xl bg-red-50 text-red-600 border border-red-200 text-sm font-semibold hover:bg-red-100 transition"
+              >
+                Cancelar
+              </button>
+              `
+              : ''
+          }
+        </div>
       </div>
-    </div>
     `
   }).join('')
 
   bindInviteActions()
 }
 
-async function loadTeamMembers() {
-  const { data } = await supabase
-    .from('project_members')
-    .select('*')
-    .eq('project_id', activeProjectId)
+async function loadProjectInfo() {
+  if (!activeProjectId) {
+    if (projectNameEl) projectNameEl.textContent = 'Nenhum projeto selecionado'
+    if (projectSubtitleEl) {
+      projectSubtitleEl.textContent = 'Selecione um projeto para gerenciar a equipe.'
+    }
+    return
+  }
 
-  const userIds = data.map(m => m.user_id)
+  const { data, error } = await supabase
+    .from('projects')
+    .select('id, name')
+    .eq('id', activeProjectId)
+    .single()
 
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('*')
-    .in('id', userIds)
+  if (error || !data) {
+    if (projectNameEl) projectNameEl.textContent = 'Projeto não encontrado'
+    if (projectSubtitleEl) {
+      projectSubtitleEl.textContent = 'Verifique o projeto ativo selecionado.'
+    }
+    return
+  }
 
-  const map = new Map(profiles.map(p => [p.id, p]))
-
-  const merged = data.map(m => ({
-    ...m,
-    profiles: map.get(m.user_id)
-  }))
-
-  renderTeamList(merged)
+  if (projectNameEl) projectNameEl.textContent = data.name
+  if (projectSubtitleEl) {
+    projectSubtitleEl.textContent = 'Gerencie acessos deste projeto'
+  }
 }
 
-async function loadPendingInvites() {
-  const { data } = await supabase
-    .from('project_invitations')
-    .select('*')
-    .eq('project_id', activeProjectId)
-    .eq('status', 'pending')
+async function loadCurrentUserRole() {
+  if (!currentUser || !activeProjectId) {
+    currentUserRole = null
+    if (currentUserRoleEl) currentUserRoleEl.textContent = '—'
+    return
+  }
 
-  renderPendingInvites(data)
-}
-
-async function createInvitation(email, role) {
-  const { data: existing } = await supabase
-    .from('project_invitations')
-    .select('id')
-    .eq('email', email)
-    .eq('project_id', activeProjectId)
-    .eq('status', 'pending')
-
-  if (existing.length) throw new Error('Convite já existe')
-
-  const token = crypto.randomUUID()
-
-  await supabase.from('project_invitations').insert({
-    project_id: activeProjectId,
-    email,
-    role,
-    token,
-    status: 'pending',
-    invited_by: currentUser.id,
-    expires_at: new Date(Date.now() + 7 * 86400000)
-  })
-
-  return `${location.origin}/convite.html?token=${token}`
-}
-
-async function cancelInvite(id) {
-  await supabase
-    .from('project_invitations')
-    .update({ status: 'canceled' })
-    .eq('id', id)
-
-  loadPendingInvites()
-}
-
-async function changeMemberRole(id, role) {
-  await supabase
-    .from('project_members')
-    .update({ role })
-    .eq('id', id)
-
-  loadTeamMembers()
-}
-
-async function removeMember(id) {
-  if (!confirm('Remover membro?')) return
-
-  await supabase
-    .from('project_members')
-    .delete()
-    .eq('id', id)
-
-  loadTeamMembers()
-}
-
-function bindMemberActions() {
-  document.querySelectorAll('[data-change-role]').forEach(el => {
-    el.onchange = () => changeMemberRole(el.dataset.changeRole, el.value)
-  })
-
-  document.querySelectorAll('[data-remove-member]').forEach(el => {
-    el.onclick = () => removeMember(el.dataset.removeMember)
-  })
-}
-
-function bindInviteActions() {
-  document.querySelectorAll('[data-cancel-invite]').forEach(el => {
-    el.onclick = () => cancelInvite(el.dataset.cancelInvite)
-  })
-}
-
-async function init() {
-  currentUser = await getUser()
-  activeProjectId = getActiveProjectId()
-
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('project_members')
     .select('role')
     .eq('project_id', activeProjectId)
     .eq('user_id', currentUser.id)
     .single()
 
-  currentUserRole = data?.role
+  if (error || !data) {
+    currentUserRole = null
+    if (currentUserRoleEl) currentUserRoleEl.textContent = '—'
+    return
+  }
 
-  if (!canManageTeam()) inviteForm.style.display = 'none'
+  currentUserRole = data.role || null
+  if (currentUserRoleEl) currentUserRoleEl.textContent = formatRole(data.role)
 
-  loadTeamMembers()
-  loadPendingInvites()
+  if (inviteForm && !canManageTeam()) {
+    inviteForm.closest('section')?.classList.add('hidden')
+  }
 }
 
-inviteForm?.addEventListener('submit', async e => {
-  e.preventDefault()
+async function loadTeamMembers() {
+  if (!activeProjectId) {
+    renderTeamList([])
+    return
+  }
+
+  const { data: memberRows, error: memberError } = await supabase
+    .from('project_members')
+    .select('id, role, user_id, project_id')
+    .eq('project_id', activeProjectId)
+
+  if (memberError) {
+    console.error('Erro ao carregar equipe:', memberError)
+    renderTeamList([])
+    return
+  }
+
+  const members = memberRows || []
+
+  if (!members.length) {
+    renderTeamList([])
+    return
+  }
+
+  const userIds = [...new Set(members.map(member => member.user_id).filter(Boolean))]
+
+  const { data: profileRows, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, nome, email')
+    .in('id', userIds)
+
+  if (profileError) {
+    console.error('Erro ao carregar perfis da equipe:', profileError)
+  }
+
+  const profilesMap = new Map((profileRows || []).map(profile => [profile.id, profile]))
+
+  const merged = members.map(member => ({
+    ...member,
+    profiles: profilesMap.get(member.user_id) || null
+  }))
+
+  const sorted = [...merged].sort((a, b) => {
+    const order = { admin: 0, editor: 1, viewer: 2 }
+    return (order[a.role] ?? 99) - (order[b.role] ?? 99)
+  })
+
+  renderTeamList(sorted)
+}
+
+async function loadPendingInvites() {
+  if (!activeProjectId) {
+    renderPendingInvites([])
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('project_invitations')
+    .select('id, email, role, status, token, created_at, expires_at')
+    .eq('project_id', activeProjectId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Erro ao carregar convites:', error)
+    renderPendingInvites([])
+    return
+  }
+
+  renderPendingInvites(data || [])
+}
+
+function generateInviteToken() {
+  return crypto.randomUUID()
+}
+
+function buildInviteLink(token) {
+  const baseUrl = window.location.origin
+  return `${baseUrl}/convite.html?token=${token}`
+}
+
+async function createInvitation(email, role) {
+  const { data: existingInvite, error: inviteCheckError } = await supabase
+    .from('project_invitations')
+    .select('id')
+    .eq('project_id', activeProjectId)
+    .eq('email', email)
+    .eq('status', 'pending')
+    .limit(1)
+
+  if (inviteCheckError) throw inviteCheckError
+  if (existingInvite?.length) throw new Error('Já existe um convite pendente para este e-mail.')
+
+  const token = generateInviteToken()
+
+  const { error } = await supabase
+    .from('project_invitations')
+    .insert({
+      project_id: activeProjectId,
+      email,
+      role,
+      token,
+      status: 'pending',
+      invited_by: currentUser.id,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    })
+
+  if (error) throw error
+
+  return buildInviteLink(token)
+}
+
+async function handleInviteSubmit(event) {
+  event.preventDefault()
+
+  if (!currentUser) {
+    setMessage(inviteMessageEl, 'Usuário não autenticado.', 'error')
+    return
+  }
+
+  if (!activeProjectId) {
+    setMessage(inviteMessageEl, 'Nenhum projeto ativo selecionado.', 'error')
+    return
+  }
+
+  const email = inviteEmailInput?.value.trim().toLowerCase()
+  const role = inviteRoleInput?.value
+
+  if (!email) {
+    setMessage(inviteMessageEl, 'Informe um e-mail válido.', 'error')
+    return
+  }
+
+  if (!['editor', 'viewer'].includes(role)) {
+    setMessage(inviteMessageEl, 'Permissão inválida.', 'error')
+    return
+  }
+
+  setMessage(inviteMessageEl, 'Gerando convite...')
 
   try {
-    const link = await createInvitation(
-      inviteEmailInput.value,
-      inviteRoleInput.value
-    )
+    const inviteLink = await createInvitation(email, role)
 
-    inviteLinkCard.classList.remove('hidden')
-    generatedInviteLinkInput.value = link
-    setMessage(inviteMessageEl, 'Convite criado', 'success')
-  } catch (e) {
-    setMessage(inviteMessageEl, e.message, 'error')
+    if (inviteLinkCard) inviteLinkCard.classList.remove('hidden')
+    if (generatedInviteLinkInput) generatedInviteLinkInput.value = inviteLink
+
+    setMessage(inviteMessageEl, 'Convite gerado com sucesso.', 'success')
+    inviteForm?.reset()
+
+    await loadPendingInvites()
+  } catch (error) {
+    console.error(error)
+    setMessage(inviteMessageEl, error.message || 'Erro ao gerar convite.', 'error')
+  }
+}
+
+async function copyInviteLink() {
+  const value = generatedInviteLinkInput?.value.trim()
+  if (!value) return
+
+  try {
+    await navigator.clipboard.writeText(value)
+    setMessage(inviteMessageEl, 'Link copiado com sucesso.', 'success')
+  } catch (error) {
+    console.error(error)
+    setMessage(inviteMessageEl, 'Não foi possível copiar o link.', 'error')
+  }
+}
+
+async function changeMemberRole(memberId, role) {
+  const { error } = await supabase
+    .from('project_members')
+    .update({ role })
+    .eq('id', memberId)
+    .eq('project_id', activeProjectId)
+
+  if (error) {
+    console.error('Erro ao alterar função:', error)
+    alert('Erro ao alterar função do membro.')
+    return
+  }
+
+  await loadTeamMembers()
+}
+
+async function removeMember(memberId) {
+  const confirmed = window.confirm('Tem certeza que deseja remover este membro da equipe?')
+  if (!confirmed) return
+
+  const { error } = await supabase
+    .from('project_members')
+    .delete()
+    .eq('id', memberId)
+    .eq('project_id', activeProjectId)
+
+  if (error) {
+    console.error('Erro ao remover membro:', error)
+    alert('Erro ao remover membro.')
+    return
+  }
+
+  await loadTeamMembers()
+}
+
+async function cancelInvite(inviteId) {
+  const confirmed = window.confirm('Cancelar este convite pendente?')
+  if (!confirmed) return
+
+  const { error } = await supabase
+    .from('project_invitations')
+    .update({ status: 'canceled' })
+    .eq('id', inviteId)
+    .eq('project_id', activeProjectId)
+
+  if (error) {
+    console.error('Erro ao cancelar convite:', error)
+    alert('Erro ao cancelar convite.')
+    return
+  }
+
+  await loadPendingInvites()
+}
+
+function bindMemberActions() {
+  document.querySelectorAll('[data-change-role]').forEach(select => {
+    select.addEventListener('change', async () => {
+      const memberId = select.dataset.changeRole
+      const role = select.value
+      await changeMemberRole(memberId, role)
+    })
+  })
+
+  document.querySelectorAll('[data-remove-member]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const memberId = btn.dataset.removeMember
+      await removeMember(memberId)
+    })
+  })
+}
+
+function bindInviteActions() {
+  document.querySelectorAll('[data-cancel-invite]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const inviteId = btn.dataset.cancelInvite
+      await cancelInvite(inviteId)
+    })
+  })
+}
+
+async function initPage() {
+  currentUser = await getUser()
+  if (!currentUser) return
+
+  activeProjectId = getActiveProjectId()
+
+  await loadProjectInfo()
+  await loadCurrentUserRole()
+  await loadTeamMembers()
+  await loadPendingInvites()
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  initPage()
+
+  if (inviteForm) {
+    inviteForm.addEventListener('submit', handleInviteSubmit)
+  }
+
+  if (copyInviteLinkBtn) {
+    copyInviteLinkBtn.addEventListener('click', copyInviteLink)
   }
 })
-
-copyInviteLinkBtn?.addEventListener('click', async () => {
-  await navigator.clipboard.writeText(generatedInviteLinkInput.value)
-  setMessage(inviteMessageEl, 'Copiado', 'success')
-})
-
-init()

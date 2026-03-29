@@ -22,6 +22,8 @@ function formatRole(role) {
 }
 
 function setStatus(text, type = 'default') {
+  if (!inviteStatus) return
+
   inviteStatus.textContent = text
   inviteStatus.className = 'font-medium'
 
@@ -44,6 +46,15 @@ async function loadInvite() {
 
   if (!token) {
     setStatus('Convite inválido.', 'error')
+    if (goLoginBtn) goLoginBtn.classList.remove('hidden')
+    return
+  }
+
+  const user = await getUser()
+
+  if (!user) {
+    setStatus('Faça login para visualizar e aceitar este convite.')
+    if (goLoginBtn) goLoginBtn.classList.remove('hidden')
     return
   }
 
@@ -51,26 +62,31 @@ async function loadInvite() {
     .from('project_invitations')
     .select('*')
     .eq('token', token)
-    .single()
+    .maybeSingle()
+
+  console.log('INVITE:', invite)
+  console.log('INVITE ERROR:', error)
 
   if (error || !invite) {
     setStatus('Convite não encontrado.', 'error')
+    if (goLoginBtn) goLoginBtn.classList.remove('hidden')
     return
   }
 
   if (invite.status !== 'pending') {
     setStatus('Este convite já foi utilizado ou não está mais disponível.', 'error')
+    if (goLoginBtn) goLoginBtn.classList.remove('hidden')
     return
   }
 
   currentInvite = invite
 
-  inviteInfo.classList.remove('hidden')
-  acceptInviteBtn.classList.remove('hidden')
-  goLoginBtn.classList.remove('hidden')
+  if (inviteInfo) inviteInfo.classList.remove('hidden')
+  if (acceptInviteBtn) acceptInviteBtn.classList.remove('hidden')
+  if (goLoginBtn) goLoginBtn.classList.remove('hidden')
 
-  inviteEmailInput.value = invite.email || ''
-  inviteRoleInput.value = formatRole(invite.role)
+  if (inviteEmailInput) inviteEmailInput.value = invite.email || ''
+  if (inviteRoleInput) inviteRoleInput.value = formatRole(invite.role)
 
   setStatus('Convite carregado com sucesso.')
 }
@@ -93,8 +109,29 @@ async function acceptInvite() {
     return
   }
 
-  acceptInviteBtn.disabled = true
-  acceptInviteBtn.textContent = 'Entrando...'
+  if (acceptInviteBtn) {
+    acceptInviteBtn.disabled = true
+    acceptInviteBtn.textContent = 'Entrando...'
+  }
+
+  const { data: existingMember } = await supabase
+    .from('project_members')
+    .select('id')
+    .eq('project_id', currentInvite.project_id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (existingMember) {
+    await supabase
+      .from('project_invitations')
+      .update({ status: 'accepted' })
+      .eq('id', currentInvite.id)
+
+    localStorage.setItem('activeProjectId', currentInvite.project_id)
+    setStatus('Você já faz parte dessa agenda.', 'success')
+    window.location.href = 'dashboard.html'
+    return
+  }
 
   const { error: memberError } = await supabase
     .from('project_members')
@@ -105,17 +142,13 @@ async function acceptInvite() {
     }])
 
   if (memberError) {
-    if (memberError.code === '23505') {
-      localStorage.setItem('activeProjectId', currentInvite.project_id)
-      setStatus('Você já faz parte dessa agenda.', 'success')
-      window.location.href = 'dashboard.html'
-      return
-    }
-
     console.error(memberError)
     setStatus('Erro ao entrar na equipe.', 'error')
-    acceptInviteBtn.disabled = false
-    acceptInviteBtn.textContent = 'Aceitar convite'
+
+    if (acceptInviteBtn) {
+      acceptInviteBtn.disabled = false
+      acceptInviteBtn.textContent = 'Aceitar convite'
+    }
     return
   }
 
@@ -130,7 +163,6 @@ async function acceptInvite() {
 
   localStorage.setItem('activeProjectId', currentInvite.project_id)
   setStatus('Convite aceito com sucesso.', 'success')
-
   window.location.href = 'dashboard.html'
 }
 
@@ -141,6 +173,11 @@ function goToLogin() {
 window.addEventListener('DOMContentLoaded', () => {
   loadInvite()
 
-  acceptInviteBtn.addEventListener('click', acceptInvite)
-  goLoginBtn.addEventListener('click', goToLogin)
+  if (acceptInviteBtn) {
+    acceptInviteBtn.addEventListener('click', acceptInvite)
+  }
+
+  if (goLoginBtn) {
+    goLoginBtn.addEventListener('click', goToLogin)
+  }
 })

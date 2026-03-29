@@ -9,10 +9,9 @@ function getActiveProjectId() {
 }
 
 async function getUser() {
-  const { data, error } = await supabase.auth.getUser()
+  const { data } = await supabase.auth.getUser()
 
-  if (error || !data.user) {
-    alert('Você precisa estar logado')
+  if (!data.user) {
     window.location.href = 'login.html'
     return null
   }
@@ -27,19 +26,14 @@ async function loadCurrentUserRole() {
   const projectId = getActiveProjectId()
   if (!projectId) return null
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('project_members')
     .select('role')
     .eq('project_id', projectId)
     .eq('user_id', user.id)
     .single()
 
-  if (error || !data) {
-    currentUserRole = null
-    return null
-  }
-
-  currentUserRole = data.role || null
+  currentUserRole = data?.role || null
   return currentUserRole
 }
 
@@ -48,141 +42,81 @@ function canManageAgenda() {
 }
 
 document.getElementById("create-show-modal-container").innerHTML = `
-  <div id="createShowModal" class="fixed inset-0 hidden z-[70]">
-    <div id="modalBackdrop" class="absolute inset-0 bg-black/45"></div>
+<div id="createShowModal" class="fixed inset-0 hidden z-[70]">
+  <div id="modalBackdrop" class="absolute inset-0 bg-black/45"></div>
 
-    <div class="relative z-10 h-full w-full overflow-y-auto">
-      <div class="min-h-full flex items-start md:items-center justify-center p-3 md:p-6">
-        <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-green-100 my-4 md:my-8 max-h-[92vh] flex flex-col">
-          
-          <div class="flex items-center justify-between px-5 py-4 border-b">
-            <h3 id="modalTitle" class="text-2xl font-light text-gray-700">Novo show</h3>
-            <button onclick="attemptCloseModal()" class="text-3xl text-gray-400 hover:text-gray-700">&times;</button>
-          </div>
+  <div class="relative z-10 h-full w-full overflow-y-auto">
+    <div class="min-h-full flex items-center justify-center p-4">
+      <div class="w-full max-w-3xl bg-white rounded-3xl shadow-xl border p-6">
 
-          <div class="overflow-y-auto px-5 py-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 id="modalTitle" class="text-xl font-semibold">Show</h3>
+          <button onclick="closeCreateShowModal()" class="text-xl">✕</button>
+        </div>
 
-            <div class="flex items-center justify-between mb-5">
-              <div>
-                <p class="text-sm text-gray-500" id="modalSubtitle">Gerencie os dados do show</p>
-              </div>
+        <p id="modalSubtitle" class="text-sm text-gray-500 mb-4"></p>
 
-              <button
-                id="deleteShowBtn"
-                onclick="deleteCurrentShow()"
-                class="hidden bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-xl text-sm font-medium transition"
-              >
-                Excluir data
-              </button>
-            </div>
+        <div class="grid grid-cols-2 gap-4">
 
-            <div class="grid md:grid-cols-2 gap-5">
+          <input id="showDate" type="date" class="border p-2 rounded-lg">
+          <input id="showTime" type="time" class="border p-2 rounded-lg">
 
-              <div>
-                <label class="block mb-2 text-sm font-medium text-gray-700">Data</label>
-                <input id="showDate" type="date" class="w-full h-12 px-3 border rounded-xl">
-              </div>
+          <input id="showState" placeholder="Estado" class="border p-2 rounded-lg">
+          <input id="showCity" placeholder="Cidade" class="border p-2 rounded-lg">
 
-              <div>
-                <label class="block mb-2 text-sm font-medium text-gray-700">Horário</label>
-                <input id="showTime" type="time" class="w-full h-12 px-3 border rounded-xl">
-              </div>
+          <input id="showTitle" placeholder="Título" class="col-span-2 border p-2 rounded-lg">
+          <input id="showContractor" placeholder="Contratante" class="col-span-2 border p-2 rounded-lg">
 
-              <div>
-                <label class="block mb-2 text-sm font-medium text-gray-700">Estado</label>
-                <input id="showState" type="text" class="w-full h-12 px-3 border rounded-xl">
-              </div>
-
-              <div>
-                <label class="block mb-2 text-sm font-medium text-gray-700">Cidade</label>
-                <input id="showCity" type="text" class="w-full h-12 px-3 border rounded-xl">
-              </div>
-
-              <div class="md:col-span-2">
-                <label class="block mb-2 text-sm font-medium text-gray-700">Título</label>
-                <input id="showTitle" type="text" class="w-full h-12 px-3 border rounded-xl">
-              </div>
-
-              <div class="md:col-span-2">
-                <label class="block mb-2 text-sm font-medium text-gray-700">Contratante</label>
-                <input id="showContractor" type="text" class="w-full h-12 px-3 border rounded-xl">
-              </div>
-
-              <div class="md:col-span-2">
-                <label class="block mb-2 text-sm font-medium text-gray-700">Observações</label>
-                <textarea id="showNotes" class="w-full p-3 border rounded-xl"></textarea>
-              </div>
-
-            </div>
-
-            <div class="text-center mt-6">
-              <button id="saveShowBtn" onclick="saveShow()" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl">
-                Salvar
-              </button>
-            </div>
-
-          </div>
+          <textarea id="showNotes" placeholder="Observações" class="col-span-2 border p-2 rounded-lg"></textarea>
 
         </div>
+
+        <div class="flex justify-between mt-6">
+          <button id="deleteShowBtn" class="text-red-600 hidden">Excluir</button>
+
+          <button id="saveShowBtn" class="bg-green-500 text-white px-6 py-2 rounded-lg">
+            Salvar
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
+</div>
 `
-
-function emitShowsChanged() {
-  window.dispatchEvent(new CustomEvent('showsChanged'))
-}
 
 function setReadOnlyMode(readOnly) {
   const fields = [
-    'showDate',
-    'showTime',
-    'showCity',
-    'showState',
-    'showTitle',
-    'showContractor',
-    'showNotes'
+    'showDate','showTime','showCity','showState',
+    'showTitle','showContractor','showNotes'
   ]
 
   fields.forEach(id => {
     const el = document.getElementById(id)
-    if (!el) return
     el.disabled = readOnly
-    if (readOnly) {
-      el.classList.add('bg-gray-50', 'text-gray-500', 'cursor-not-allowed')
-    } else {
-      el.classList.remove('bg-gray-50', 'text-gray-500', 'cursor-not-allowed')
-    }
+    el.classList.toggle('bg-gray-100', readOnly)
   })
 
-  const saveBtn = document.getElementById('saveShowBtn')
-  const deleteBtn = document.getElementById('deleteShowBtn')
-  const subtitle = document.getElementById('modalSubtitle')
+  document.getElementById('saveShowBtn').style.display = readOnly ? 'none' : 'block'
+  document.getElementById('deleteShowBtn').style.display =
+    readOnly || !editingId ? 'none' : 'block'
 
-  if (saveBtn) saveBtn.classList.toggle('hidden', readOnly)
-  if (deleteBtn) deleteBtn.classList.toggle('hidden', readOnly || !editingId)
-
-  if (subtitle) {
-    subtitle.textContent = readOnly
-      ? 'Modo visualização'
-      : 'Gerencie os dados do show'
-  }
+  document.getElementById('modalSubtitle').innerText =
+    readOnly ? 'Modo visualização (sem permissão para editar)' : ''
 }
 
 async function openCreateShowModal(date = '', show = null) {
   await loadCurrentUserRole()
 
   const modal = document.getElementById('createShowModal')
-  const title = document.getElementById('modalTitle')
-  const deleteBtn = document.getElementById('deleteShowBtn')
-
   modal.classList.remove('hidden')
-  document.body.classList.add('overflow-hidden')
 
   if (show) {
     editingId = show.id
-    editingOriginalShow = { ...show }
-    title.innerText = canManageAgenda() ? 'Editar show' : 'Detalhes do show'
+    editingOriginalShow = show
+
+    document.getElementById('modalTitle').innerText =
+      canManageAgenda() ? 'Editar show' : 'Visualizar show'
 
     document.getElementById('showDate').value = show.data || ''
     document.getElementById('showTime').value = show.horario || ''
@@ -192,18 +126,15 @@ async function openCreateShowModal(date = '', show = null) {
     document.getElementById('showContractor').value = show.contratante || ''
     document.getElementById('showNotes').value = show.observacoes || ''
 
-    if (canManageAgenda()) deleteBtn.classList.remove('hidden')
-    else deleteBtn.classList.add('hidden')
   } else {
     if (!canManageAgenda()) {
-      alert('Você só pode visualizar a agenda.')
+      alert('Você só pode visualizar a agenda')
       return
     }
 
     editingId = null
-    editingOriginalShow = null
-    title.innerText = 'Novo show'
-    deleteBtn.classList.add('hidden')
+
+    document.getElementById('modalTitle').innerText = 'Novo show'
 
     document.getElementById('showDate').value = date || ''
     document.getElementById('showTime').value = ''
@@ -219,139 +150,55 @@ async function openCreateShowModal(date = '', show = null) {
 
 function closeCreateShowModal() {
   document.getElementById('createShowModal').classList.add('hidden')
-  document.body.classList.remove('overflow-hidden')
 }
-
-function attemptCloseModal() {
-  closeCreateShowModal()
-}
-
-document.addEventListener('click', function (event) {
-  const backdrop = document.getElementById('modalBackdrop')
-  if (backdrop && event.target === backdrop) {
-    attemptCloseModal()
-  }
-})
 
 async function saveShow() {
-  await loadCurrentUserRole()
-
-  if (!canManageAgenda()) {
-    alert('Você não tem permissão para alterar a agenda.')
-    return
-  }
+  if (!canManageAgenda()) return
 
   const data = document.getElementById('showDate').value
-  const horario = document.getElementById('showTime').value || null
-  const cidade = document.getElementById('showCity').value
-  const estado = document.getElementById('showState').value
-  const titulo = document.getElementById('showTitle').value
-  const contratante = document.getElementById('showContractor').value
-  const observacoes = document.getElementById('showNotes').value
-
-  if (!data) {
-    alert('Preencha a data')
-    return
-  }
-
-  const user = await getUser()
-  if (!user) return
+  if (!data) return alert('Preencha a data')
 
   const projectId = getActiveProjectId()
 
-  if (!projectId) {
-    alert('Nenhuma agenda selecionada')
-    return
+  const payload = {
+    project_id: projectId,
+    data,
+    horario: document.getElementById('showTime').value || null,
+    cidade: document.getElementById('showCity').value,
+    estado: document.getElementById('showState').value,
+    titulo: document.getElementById('showTitle').value,
+    contratante: document.getElementById('showContractor').value,
+    observacoes: document.getElementById('showNotes').value
   }
 
-  let error = null
+  let error
 
   if (editingId) {
-    const res = await supabase
-      .from('shows')
-      .update({
-        data,
-        horario,
-        cidade,
-        estado,
-        titulo,
-        contratante,
-        observacoes
-      })
-      .eq('id', editingId)
-      .select()
-      .single()
-
+    const res = await supabase.from('shows').update(payload).eq('id', editingId)
     error = res.error
-
-    if (!error && window.updateShowInCalendar && editingOriginalShow) {
-      window.updateShowInCalendar(editingOriginalShow, res.data)
-    }
   } else {
-    const res = await supabase
-      .from('shows')
-      .insert([{
-        project_id: projectId,
-        data,
-        horario,
-        cidade,
-        estado,
-        titulo,
-        contratante,
-        observacoes
-      }])
-      .select()
-      .single()
-
+    const res = await supabase.from('shows').insert([payload])
     error = res.error
-
-    if (!error && window.addShowToCalendar) {
-      window.addShowToCalendar(res.data)
-    }
   }
 
-  if (error) {
-    alert('Erro ao salvar')
-    console.error(error)
-    return
-  }
+  if (error) return alert('Erro ao salvar')
 
   closeCreateShowModal()
-  emitShowsChanged()
+  location.reload()
 }
 
 async function deleteCurrentShow() {
-  await loadCurrentUserRole()
+  if (!canManageAgenda()) return
 
-  if (!canManageAgenda()) {
-    alert('Você não tem permissão para excluir.')
-    return
-  }
+  if (!confirm('Excluir show?')) return
 
-  if (!editingId) return
-
-  const confirmar = confirm('Excluir essa data?')
-  if (!confirmar) return
-
-  const { error } = await supabase
-    .from('shows')
-    .delete()
-    .eq('id', editingId)
-
-  if (error) {
-    alert('Erro ao excluir')
-    return
-  }
-
-  if (window.removeShowFromCalendar && editingOriginalShow) {
-    window.removeShowFromCalendar(editingId, editingOriginalShow.data)
-  }
+  await supabase.from('shows').delete().eq('id', editingId)
 
   closeCreateShowModal()
-  emitShowsChanged()
+  location.reload()
 }
 
+document.getElementById('saveShowBtn')?.addEventListener('click', saveShow)
+document.getElementById('deleteShowBtn')?.addEventListener('click', deleteCurrentShow)
+
 window.openCreateShowModal = openCreateShowModal
-window.saveShow = saveShow
-window.attemptCloseModal = attemptCloseModal
-window.deleteCurrentShow = deleteCurrentShow

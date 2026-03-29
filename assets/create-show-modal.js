@@ -27,7 +27,9 @@ document.getElementById("create-show-modal-container").innerHTML = `
 
               <div>
                 <label>Horário</label>
-                <input id="showTime" type="time" class="w-full h-12 px-3 border rounded-xl">
+                <input id="showTime" type="time" placeholder="Ainda não definido" class="w-full h-12 px-3 border rounded-xl">
+<p class="text-xs text-gray-400 mt-1">Se não definir, ficará sem horário</p>
+
                 <p class="text-xs text-gray-500 mt-1">Pode deixar vazio. Vai aparecer como “Ainda não definido”.</p>
               </div>
 

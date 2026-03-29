@@ -36,70 +36,42 @@ function setStatus(text, type = 'default') {
   }
 }
 
-function ensureDebugBox() {
-  let box = document.getElementById('inviteDebugBox')
-
-  if (!box) {
-    box = document.createElement('pre')
-    box.id = 'inviteDebugBox'
-    box.className = 'mt-4 p-4 rounded-2xl border border-gray-200 bg-gray-50 text-xs text-gray-700 whitespace-pre-wrap break-words'
-    inviteStatus?.parentElement?.insertAdjacentElement('afterend', box)
-  }
-
-  return box
-}
-
-function setDebug(data) {
-  const box = ensureDebugBox()
-  if (!box) return
-
-  try {
-    box.textContent = JSON.stringify(data, null, 2)
-  } catch {
-    box.textContent = String(data)
-  }
-}
-
 async function getUser() {
   const { data, error } = await supabase.auth.getUser()
 
-  return {
-    user: data?.user || null,
-    error: error || null
+  if (error) {
+    console.error('Erro ao buscar usuário:', error)
+    return null
   }
+
+  return data?.user || null
+}
+
+function redirectToLogin() {
+  const next = `${window.location.pathname}${window.location.search}`
+  window.location.href = `login.html?next=${encodeURIComponent(next)}`
 }
 
 async function loadInvite() {
   const token = getTokenFromUrl()
 
-  const authResult = await getUser()
-  const user = authResult.user
-
-  const debugStart = {
-    step: 'loadInvite:start',
-    url: window.location.href,
-    pathname: window.location.pathname,
-    search: window.location.search,
-    token,
-    loggedIn: !!user,
-    userEmail: user?.email || null,
-    authError: authResult.error ? {
-      message: authResult.error.message,
-      code: authResult.error.code || null
-    } : null
-  }
-
-  setDebug(debugStart)
-
   if (!token) {
     setStatus('Convite inválido.', 'error')
-    if (goLoginBtn) goLoginBtn.classList.remove('hidden')
+    if (goLoginBtn) {
+      goLoginBtn.classList.remove('hidden')
+      goLoginBtn.textContent = 'Entrar'
+    }
     return
   }
 
+  const user = await getUser()
+
   if (!user) {
     setStatus('Faça login para visualizar e aceitar este convite.')
-    if (goLoginBtn) goLoginBtn.classList.remove('hidden')
+    if (goLoginBtn) {
+      goLoginBtn.classList.remove('hidden')
+      goLoginBtn.textContent = 'Entrar para aceitar convite'
+    }
     return
   }
 
@@ -109,35 +81,21 @@ async function loadInvite() {
     .eq('token', token)
     .maybeSingle()
 
-  setDebug({
-    step: 'loadInvite:queryResult',
-    token,
-    loggedIn: !!user,
-    userEmail: user?.email || null,
-    invite,
-    error: error ? {
-      message: error.message,
-      code: error.code || null,
-      details: error.details || null,
-      hint: error.hint || null
-    } : null
-  })
+  console.log('INVITE:', invite)
+  console.log('INVITE ERROR:', error)
 
   if (error) {
     setStatus('Erro ao carregar convite.', 'error')
-    if (goLoginBtn) goLoginBtn.classList.remove('hidden')
     return
   }
 
   if (!invite) {
     setStatus('Convite não encontrado.', 'error')
-    if (goLoginBtn) goLoginBtn.classList.remove('hidden')
     return
   }
 
   if (invite.status !== 'pending') {
     setStatus('Este convite já foi utilizado ou não está mais disponível.', 'error')
-    if (goLoginBtn) goLoginBtn.classList.remove('hidden')
     return
   }
 
@@ -145,22 +103,24 @@ async function loadInvite() {
 
   if (inviteInfo) inviteInfo.classList.remove('hidden')
   if (acceptInviteBtn) acceptInviteBtn.classList.remove('hidden')
-  if (goLoginBtn) goLoginBtn.classList.remove('hidden')
+  if (goLoginBtn) {
+    goLoginBtn.classList.remove('hidden')
+    goLoginBtn.textContent = 'Entrar com outra conta'
+  }
 
   if (inviteEmailInput) inviteEmailInput.value = invite.email || ''
   if (inviteRoleInput) inviteRoleInput.value = formatRole(invite.role)
 
-  setStatus('Convite carregado com sucesso.')
+  setStatus('Convite carregado com sucesso.', 'success')
 }
 
 async function acceptInvite() {
   if (!currentInvite) return
 
-  const authResult = await getUser()
-  const user = authResult.user
+  const user = await getUser()
 
   if (!user) {
-    window.location.href = `login.html?next=${encodeURIComponent(window.location.pathname + window.location.search)}`
+    redirectToLogin()
     return
   }
 
@@ -184,19 +144,9 @@ async function acceptInvite() {
     .eq('user_id', user.id)
     .maybeSingle()
 
-  setDebug({
-    step: 'acceptInvite:existingMember',
-    currentInvite,
-    userEmail,
-    inviteEmail,
-    existingMember,
-    existingError: existingError ? {
-      message: existingError.message,
-      code: existingError.code || null,
-      details: existingError.details || null,
-      hint: existingError.hint || null
-    } : null
-  })
+  if (existingError) {
+    console.error(existingError)
+  }
 
   if (existingMember) {
     await supabase
@@ -221,17 +171,7 @@ async function acceptInvite() {
     ])
 
   if (memberError) {
-    setDebug({
-      step: 'acceptInvite:insertMemberError',
-      currentInvite,
-      memberError: {
-        message: memberError.message,
-        code: memberError.code || null,
-        details: memberError.details || null,
-        hint: memberError.hint || null
-      }
-    })
-
+    console.error(memberError)
     setStatus('Erro ao entrar na equipe.', 'error')
 
     if (acceptInviteBtn) {
@@ -247,15 +187,7 @@ async function acceptInvite() {
     .eq('id', currentInvite.id)
 
   if (updateError) {
-    setDebug({
-      step: 'acceptInvite:updateInvitationError',
-      updateError: {
-        message: updateError.message,
-        code: updateError.code || null,
-        details: updateError.details || null,
-        hint: updateError.hint || null
-      }
-    })
+    console.error(updateError)
   }
 
   localStorage.setItem('activeProjectId', currentInvite.project_id)
@@ -263,8 +195,8 @@ async function acceptInvite() {
   window.location.href = 'dashboard.html'
 }
 
-function goToLogin() {
-  window.location.href = `login.html?next=${encodeURIComponent(window.location.pathname + window.location.search)}`
+function handleLoginButton() {
+  redirectToLogin()
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -275,6 +207,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   if (goLoginBtn) {
-    goLoginBtn.addEventListener('click', goToLogin)
+    goLoginBtn.addEventListener('click', handleLoginButton)
   }
 })

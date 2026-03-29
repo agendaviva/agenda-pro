@@ -129,9 +129,9 @@ window.addEventListener("DOMContentLoaded", async () => {
           </a>
 
           <!-- 🔥 SUPORTE AGORA POR ÚLTIMO -->
-          <a href="#" class="text-gray-700 hover:bg-green-50 block px-4 py-3 rounded-2xl font-semibold">
-            Suporte
-          </a>
+          <a href="suporte.html" class="${activeClass("suporte.html")} block px-4 py-3 rounded-2xl font-semibold">
+  Suporte
+</a>
 
         </nav>
       </div>

@@ -67,16 +67,15 @@ window.addEventListener("DOMContentLoaded", async () => {
     <aside id="sidebar" class="fixed z-50 top-0 left-0 h-full w-72 bg-white border-r border-green-100 p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 shadow-lg flex flex-col">
 
       <div>
-
         <div class="mb-6">
           <h1 class="text-2xl font-bold text-green-700">Agenda Lux</h1>
           <p class="text-sm text-gray-500 mt-1">Painel do empresário</p>
         </div>
 
-        <!-- PROJETO -->
         <div class="mb-6 relative">
           <button id="projectSwitcherBtn"
-            class="w-full flex items-center justify-between px-4 py-3 rounded-2xl border border-green-100 bg-green-50 hover:bg-green-100 transition">
+            class="w-full flex items-center justify-between px-4 py-3 rounded-2xl border border-green-100 bg-green-50 hover:bg-green-100 transition"
+            type="button">
             
             <div class="text-left">
               <p class="text-xs text-gray-500">Agenda atual</p>
@@ -89,29 +88,30 @@ window.addEventListener("DOMContentLoaded", async () => {
           </button>
 
           <div id="projectDropdown"
-            class="hidden absolute left-0 top-full mt-2 w-full bg-white border border-green-100 rounded-2xl shadow-lg p-2">
+            class="hidden absolute left-0 top-full mt-2 w-full bg-white border border-green-100 rounded-2xl shadow-lg p-2 z-50">
 
             ${projects.map(p => `
-              <button class="project-option w-full text-left px-4 py-3 rounded-xl ${
-                p.project_id === activeProjectId
-                  ? "bg-green-600 text-white"
-                  : "hover:bg-green-50"
-              }"
-              data-id="${p.project_id}">
+              <button
+                class="project-option w-full text-left px-4 py-3 rounded-xl ${
+                  p.project_id === activeProjectId
+                    ? "bg-green-600 text-white"
+                    : "text-gray-700 hover:bg-green-50"
+                }"
+                data-id="${p.project_id}"
+                type="button">
                 ${p.name}
               </button>
             `).join("")}
 
             <button id="createProjectBtn"
-              class="w-full text-left px-4 py-3 rounded-xl text-green-700 hover:bg-green-50 font-medium">
+              class="w-full text-left px-4 py-3 rounded-xl text-green-700 hover:bg-green-50 font-medium"
+              type="button">
               + Criar nova agenda
             </button>
           </div>
         </div>
 
-        <!-- MENU -->
         <nav class="space-y-3">
-
           <a href="dashboard.html" class="${activeClass("dashboard.html")} block px-4 py-3 rounded-2xl font-semibold">
             Dashboard
           </a>
@@ -128,11 +128,9 @@ window.addEventListener("DOMContentLoaded", async () => {
             Configurações
           </a>
 
-          <!-- 🔥 SUPORTE AGORA POR ÚLTIMO -->
           <a href="suporte.html" class="${activeClass("suporte.html")} block px-4 py-3 rounded-2xl font-semibold">
-  Suporte
-</a>
-
+            Suporte
+          </a>
         </nav>
       </div>
 

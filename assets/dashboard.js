@@ -1,6 +1,18 @@
 import { supabase } from './supabase.js'
 
-// 🔥 MENU DO USUÁRIO
+// 🔐 USER
+async function getUser() {
+  const { data, error } = await supabase.auth.getUser()
+
+  if (error || !data.user) {
+    window.location.href = 'login.html'
+    return null
+  }
+
+  return data.user
+}
+
+// 👤 MENU USUÁRIO
 async function setupUserMenu() {
   const { data } = await supabase.auth.getUser()
   if (!data.user) return
@@ -8,17 +20,14 @@ async function setupUserMenu() {
   let nome = data.user.user_metadata?.nome || data.user.email || 'Usuário'
   const firstName = nome.trim().split(' ')[0]
 
-  // nome
   const nameEl = document.getElementById('userName')
-  if (nameEl) nameEl.textContent = firstName
-
-  // avatar
   const avatarEl = document.getElementById('userAvatar')
-  if (avatarEl) avatarEl.textContent = firstName.charAt(0).toUpperCase()
-
-  // dropdown
   const btn = document.getElementById('userMenuBtn')
   const dropdown = document.getElementById('userDropdown')
+  const logoutBtn = document.getElementById('logoutBtn')
+
+  if (nameEl) nameEl.textContent = firstName
+  if (avatarEl) avatarEl.textContent = firstName.charAt(0).toUpperCase()
 
   if (btn && dropdown) {
     btn.addEventListener('click', () => {
@@ -32,8 +41,6 @@ async function setupUserMenu() {
     })
   }
 
-  // logout
-  const logoutBtn = document.getElementById('logoutBtn')
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
       await supabase.auth.signOut()
@@ -42,31 +49,12 @@ async function setupUserMenu() {
   }
 }
 
-// 🔐 USUÁRIO
-async function getUser() {
-  const { data, error } = await supabase.auth.getUser()
-
-  if (error || !data.user) {
-    alert('Você precisa estar logado')
-    window.location.href = 'login.html'
-    return null
-  }
-
-  return data.user
-}
-
 // 👋 BOAS-VINDAS
 async function setWelcomeUser() {
-  const { data, error } = await supabase.auth.getUser()
+  const { data } = await supabase.auth.getUser()
+  if (!data.user) return
 
-  if (error || !data.user) return
-
-  let nome = data.user.user_metadata?.nome
-
-  if (!nome || nome.trim() === '') {
-    nome = data.user.email || 'Usuário'
-  }
-
+  let nome = data.user.user_metadata?.nome || data.user.email || 'Usuário'
   const firstName = nome.trim().split(' ')[0]
 
   const el = document.getElementById('welcomeUser')
@@ -75,7 +63,7 @@ async function setWelcomeUser() {
   }
 }
 
-// 📅 FORMATOS
+// 📅 HELPERS
 function formatDateBR(dateString) {
   const [year, month, day] = String(dateString).split('T')[0].split('-')
   return `${day}/${month}/${year}`
@@ -93,7 +81,7 @@ function getTodayLocal() {
   return `${year}-${month}-${day}`
 }
 
-// 📊 ORDENAR
+// 📊 SORT
 function sortShows(shows) {
   return [...shows].sort((a, b) => {
     const dateA = normalizeDateOnly(a.data)
@@ -107,16 +95,13 @@ function sortShows(shows) {
   })
 }
 
-// 📋 RENDER LISTA
+// 📋 RENDER
 function renderUpcomingShows(shows) {
   const list = document.getElementById('upcomingShowsList')
+  if (!list) return
 
   if (!shows.length) {
-    list.innerHTML = `
-      <div class="text-gray-400 text-sm">
-        Nenhum próximo show encontrado.
-      </div>
-    `
+    list.innerHTML = `<div class="text-gray-400 text-sm">Nenhum próximo show encontrado.</div>`
     return
   }
 
@@ -135,7 +120,7 @@ function renderUpcomingShows(shows) {
       </div>
 
       <button
-        class="edit-show-btn bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-xl text-sm font-medium transition"
+        class="edit-show-btn bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-xl text-sm"
         data-index="${index}"
       >
         Editar
@@ -159,7 +144,6 @@ function updateSummary(shows) {
   const currentYear = now.getFullYear()
 
   const sortedShows = sortShows(shows)
-
   const upcomingShows = sortedShows.filter(show => normalizeDateOnly(show.data) >= today)
 
   const showsThisMonth = shows.filter(show => {
@@ -168,9 +152,7 @@ function updateSummary(shows) {
   })
 
   const uniqueCities = new Set(
-    shows
-      .map(show => `${show.cidade || ''}-${show.estado || ''}`)
-      .filter(city => city !== '-')
+    shows.map(show => `${show.cidade || ''}-${show.estado || ''}`).filter(c => c !== '-')
   )
 
   document.getElementById('showsThisMonth').textContent = showsThisMonth.length
@@ -178,20 +160,16 @@ function updateSummary(shows) {
   document.getElementById('citiesCount').textContent = uniqueCities.size
 
   if (upcomingShows.length) {
-    const nextShow = upcomingShows[0]
+    const next = upcomingShows[0]
 
     document.getElementById('nextShowDate').textContent =
-      `${formatDateBR(nextShow.data)}${nextShow.horario ? ` • ${nextShow.horario}` : ''}`
+      `${formatDateBR(next.data)}${next.horario ? ` • ${next.horario}` : ''}`
 
     document.getElementById('nextShowCity').textContent =
-      `${nextShow.cidade || '—'}${nextShow.estado ? `/${nextShow.estado}` : ''}`
+      `${next.cidade || '—'}${next.estado ? `/${next.estado}` : ''}`
 
     document.getElementById('nextShowTitle').textContent =
-      nextShow.titulo || 'Sem título'
-  } else {
-    document.getElementById('nextShowDate').textContent = '—'
-    document.getElementById('nextShowCity').textContent = '—'
-    document.getElementById('nextShowTitle').textContent = '—'
+      next.titulo || 'Sem título'
   }
 
   renderUpcomingShows(upcomingShows.slice(0, 5))
@@ -209,19 +187,16 @@ async function loadDashboard() {
     .select('*')
     .eq('user_id', user.id)
 
-  if (error) {
-    document.getElementById('upcomingShowsList').innerHTML = `
-      <div class="text-red-500 text-sm">Erro ao carregar shows.</div>
-    `
-    return
-  }
+  if (error) return
 
   updateSummary(shows || [])
 }
 
-// 🔁 EVENTO GLOBAL
+// 🔁 EVENT
 window.addEventListener('showsChanged', loadDashboard)
 
-// 🚀 START
-setupUserMenu()
-loadDashboard()
+// 🔥 ANTI-CRASH (IMPORTANTE)
+window.addEventListener('DOMContentLoaded', () => {
+  setupUserMenu()
+  loadDashboard()
+})

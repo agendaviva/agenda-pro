@@ -130,18 +130,18 @@ window.addEventListener("DOMContentLoaded", async () => {
             Configurações
           </a>
 
-          <!-- 🔥 SUPORTE (AGORA FUNCIONA 100%) -->
-          <a href="javascript:void(0)"
-             onclick="window.location.href='suporte.html'"
-             class="${activeClass("suporte.html")} block px-4 py-3 rounded-2xl font-semibold">
-             Suporte
-          </a>
-
+          <button
+            id="supportBtn"
+            type="button"
+            class="${activeClass("suporte.html")} block w-full text-left px-4 py-3 rounded-2xl font-semibold"
+          >
+            Suporte
+          </button>
         </nav>
       </div>
 
       <div class="mt-auto pt-6 border-t border-green-100">
-        <button id="logoutBtn" class="w-full text-left px-4 py-3 rounded-2xl text-red-600 hover:bg-red-50">
+        <button id="logoutBtn" class="w-full text-left px-4 py-3 rounded-2xl text-red-600 hover:bg-red-50" type="button">
           Sair
         </button>
       </div>
@@ -172,6 +172,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("createProjectBtn")?.addEventListener("click", () => {
     window.location.href = "novo-projeto.html";
+  });
+
+  document.getElementById("supportBtn")?.addEventListener("click", () => {
+    window.location.href = "suporte.html";
   });
 
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {

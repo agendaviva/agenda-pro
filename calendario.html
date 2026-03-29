@@ -6,440 +6,75 @@
   <title>Calendário - Agenda Lux</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gradient-to-br from-white via-green-50 to-white text-gray-900 overflow-x-hidden">
 
-  <div id="menu-container"></div>
+<div id="menu-container"></div>
 
-  <main class="md:ml-72 min-h-screen p-6 md:p-10">
-    <div class="flex items-center justify-between mb-8">
-      <div class="flex items-center gap-3">
-        <button onclick="toggleMenu()" class="md:hidden text-3xl text-green-700 leading-none">
-          ☰
-        </button>
-        <div>
-          <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Calendário</h1>
-          <p class="text-sm md:text-base text-gray-500">Gerencie sua agenda de shows por data</p>
-        </div>
-      </div>
+<main class="md:ml-72 min-h-screen p-6 md:p-10">
 
-      <button onclick="openCreateShowModal()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-sm transition">
-        + Criar Show
-      </button>
+<div class="flex items-center justify-between mb-8">
+  <div class="flex items-center gap-3">
+    <button onclick="toggleMenu()" class="md:hidden text-3xl text-green-700">☰</button>
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold">Calendário</h1>
+      <p class="text-gray-500">Gerencie sua agenda de shows</p>
     </div>
+  </div>
 
-    <section class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm mb-8">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  <button onclick="openCreateShowModal()" class="bg-green-600 text-white px-5 py-3 rounded-2xl">
+    + Criar Show
+  </button>
+</div>
+
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+
+<script>
+const diasSemana = [
+  "quarta-feira","quinta-feira","sexta-feira","sábado","domingo",
+  "segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira",
+  "sábado","domingo","segunda-feira","terça-feira","quarta-feira",
+  "quinta-feira","sexta-feira","sábado","domingo","segunda-feira",
+  "terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado",
+  "domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira"
+]
+
+for(let i=1;i<=30;i++){
+  const dia = String(i).padStart(2,'0')
+
+  document.write(`
+    <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col" data-date="2026-04-${dia}">
+
+      <div class="flex items-start justify-between mb-3">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">Abril 2026</h2>
-          <p class="text-sm text-gray-500 mt-1">Clique no + de qualquer dia para adicionar um show</p>
+          <span class="text-xl font-bold">${dia}/04</span>
+          <p class="text-sm text-gray-500">${diasSemana[i-1]}</p>
         </div>
 
-        <div class="flex gap-2">
-          <button class="px-4 py-2 rounded-xl border border-green-100 bg-white text-gray-700 hover:bg-green-50">
-            ← Mês anterior
-          </button>
-          <button class="px-4 py-2 rounded-xl bg-green-600 text-white font-semibold">
-            Abril 2026
-          </button>
-          <button class="px-4 py-2 rounded-xl border border-green-100 bg-white text-gray-700 hover:bg-green-50">
-            Próximo mês →
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Cabeçalho desktop -->
-    <section class="hidden lg:grid grid-cols-7 gap-4 mb-4 text-center">
-      <div class="text-sm font-semibold text-gray-500">Domingo</div>
-      <div class="text-sm font-semibold text-gray-500">Segunda</div>
-      <div class="text-sm font-semibold text-gray-500">Terça</div>
-      <div class="text-sm font-semibold text-gray-500">Quarta</div>
-      <div class="text-sm font-semibold text-gray-500">Quinta</div>
-      <div class="text-sm font-semibold text-gray-500">Sexta</div>
-      <div class="text-sm font-semibold text-gray-500">Sábado</div>
-    </section>
-
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
-
-      <!-- Espaços do início do mês no desktop -->
-      <div class="hidden lg:block"></div>
-      <div class="hidden lg:block"></div>
-      <div class="hidden lg:block"></div>
-
-      <!-- Dia 1 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">01/04</span>
-            <p class="text-sm text-gray-500">quarta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-01')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
+        <button onclick="openCreateShowModal('2026-04-${dia}')" 
+          class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100">
+          +
+        </button>
       </div>
 
-      <!-- Dia 2 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">02/04</span>
-            <p class="text-sm text-gray-500">quinta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-02')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
+      <div class="events-container mt-auto text-sm text-gray-400">
+        Sem eventos
       </div>
 
-      <!-- Dia 3 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">03/04</span>
-            <p class="text-sm text-gray-500">sexta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-03')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
+    </div>
+  `)
+}
+</script>
 
-      <!-- Dia 4 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">04/04</span>
-            <p class="text-sm text-gray-500">sábado</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-04')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
+</section>
 
-      <!-- Dia 5 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">05/04</span>
-            <p class="text-sm text-gray-500">domingo</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-05')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
+</main>
 
-      <!-- Dia 6 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">06/04</span>
-            <p class="text-sm text-gray-500">segunda-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-06')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
+<div id="create-show-modal-container"></div>
 
-      <!-- Dia 7 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">07/04</span>
-            <p class="text-sm text-gray-500">terça-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-07')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 8 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">08/04</span>
-            <p class="text-sm text-gray-500">quarta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-08')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 9 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">09/04</span>
-            <p class="text-sm text-gray-500">quinta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-09')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 10 -->
-<div class="bg-green-50 rounded-3xl border border-green-200 shadow-sm p-4 min-h-[180px] flex flex-col" data-date="2026-04-10">        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">10/04</span>
-            <p class="text-sm text-gray-500">sexta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-10')" class="w-8 h-8 rounded-full bg-white text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-<div class="events-container mt-auto text-sm text-gray-400">
-  Sem eventos
-</div>
-      </div>
-
-      <!-- Dia 11 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">11/04</span>
-            <p class="text-sm text-gray-500">sábado</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-11')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 12 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">12/04</span>
-            <p class="text-sm text-gray-500">domingo</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-12')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 13 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">13/04</span>
-            <p class="text-sm text-gray-500">segunda-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-13')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 14 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">14/04</span>
-            <p class="text-sm text-gray-500">terça-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-14')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 15 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">15/04</span>
-            <p class="text-sm text-gray-500">quarta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-15')" class="w-8 h-8 rounded-full bg-white text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-<div class="events-container mt-auto text-sm text-gray-400">
-  Sem eventos
-</div>
-      </div>
-
-      <!-- Dia 16 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">16/04</span>
-            <p class="text-sm text-gray-500">quinta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-16')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 17 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">17/04</span>
-            <p class="text-sm text-gray-500">sexta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-17')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 18 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">18/04</span>
-            <p class="text-sm text-gray-500">sábado</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-18')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 19 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">19/04</span>
-            <p class="text-sm text-gray-500">domingo</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-19')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 20 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">20/04</span>
-            <p class="text-sm text-gray-500">segunda-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-20')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 21 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">21/04</span>
-            <p class="text-sm text-gray-500">terça-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-21')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 22 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">22/04</span>
-            <p class="text-sm text-gray-500">quarta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-22')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 23 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">23/04</span>
-            <p class="text-sm text-gray-500">quinta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-23')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 24 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">24/04</span>
-            <p class="text-sm text-gray-500">sexta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-24')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 25 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">25/04</span>
-            <p class="text-sm text-gray-500">sábado</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-25')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 26 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">26/04</span>
-            <p class="text-sm text-gray-500">domingo</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-26')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 27 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">27/04</span>
-            <p class="text-sm text-gray-500">segunda-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-27')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 28 -->
-      <div class="bg-blue-50 rounded-3xl border border-blue-200 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">28/04</span>
-            <p class="text-sm text-gray-500">terça-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-28')" class="w-8 h-8 rounded-full bg-white text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-<div class="events-container mt-auto text-sm text-gray-400">
-  Sem eventos
-</div>
-      </div>
-
-      <!-- Dia 29 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">29/04</span>
-            <p class="text-sm text-gray-500">quarta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-29')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-      <!-- Dia 30 -->
-      <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <span class="text-xl font-bold text-gray-900">30/04</span>
-            <p class="text-sm text-gray-500">quinta-feira</p>
-          </div>
-          <button onclick="openCreateShowModal('2026-04-30')" class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition">+</button>
-        </div>
-        <div class="mt-auto text-sm text-gray-400">Sem eventos</div>
-      </div>
-
-    </section>
-  </main>
-
-  <div id="create-show-modal-container"></div>
-
-  <script src="assets/menu.js"></script>
-  <script type="module" src="assets/create-show-modal.js"></script>
-
+<script src="assets/menu.js"></script>
+<script type="module" src="assets/create-show-modal.js"></script>
 <script type="module" src="assets/calendar.js"></script>
-  
+
 </body>
 </html>

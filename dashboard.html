@@ -8,7 +8,6 @@
 </head>
 <body class="bg-gradient-to-br from-white via-green-50 to-white text-gray-900 overflow-x-hidden">
 
-  <!-- MENU LATERAL -->
   <div id="menu-container"></div>
 
   <main class="md:ml-72 min-h-screen p-6 md:p-10">
@@ -25,38 +24,10 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-4">
-
-        <button onclick="openCreateShowModal()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-sm transition">
-          + Criar Show
-        </button>
-
-        <!-- MENU USUÁRIO -->
-        <div class="relative">
-          <button id="userMenuBtn" class="flex items-center gap-3 bg-white border border-green-100 px-3 py-2 rounded-2xl hover:shadow-sm transition">
-            
-            <div id="userAvatar" class="w-9 h-9 rounded-xl bg-green-600 text-white flex items-center justify-center font-semibold">
-              U
-            </div>
-
-            <span id="userName" class="text-sm font-medium text-gray-700 hidden md:block">
-              Usuário
-            </span>
-
-            <span class="text-gray-400">⌄</span>
-          </button>
-
-          <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-white border border-green-100 rounded-2xl shadow-lg overflow-hidden z-50">
-            <button class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50">
-              Meu perfil
-            </button>
-            <button id="logoutBtn" class="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50">
-              Sair
-            </button>
-          </div>
-        </div>
-
-      </div>
+      <!-- 🔥 SÓ ISSO AGORA -->
+      <button onclick="openCreateShowModal()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-sm transition">
+        + Criar Show
+      </button>
     </div>
 
     <!-- BOAS-VINDAS -->
@@ -132,10 +103,8 @@
 
   </main>
 
-  <!-- MODAL -->
   <div id="create-show-modal-container"></div>
 
-  <!-- SCRIPTS -->
   <script src="assets/menu.js"></script>
   <script type="module" src="assets/create-show-modal.js"></script>
   <script type="module" src="assets/dashboard.js"></script>

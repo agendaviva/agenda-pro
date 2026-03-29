@@ -1,110 +1,51 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Agenda Lux</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gradient-to-br from-white via-green-50 to-white text-gray-900 overflow-x-hidden">
+<!-- HEADER -->
+<div class="flex items-center justify-between mb-8">
+  <div class="flex items-center gap-3">
+    <button onclick="toggleMenu()" class="md:hidden text-3xl text-green-700 leading-none">
+      ☰
+    </button>
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
+      <p class="text-sm md:text-base text-gray-500">Visão geral da sua agenda</p>
+    </div>
+  </div>
 
-  <div id="menu-container"></div>
+  <div class="flex items-center gap-4">
 
-  <main class="md:ml-72 min-h-screen p-6 md:p-10">
+    <button onclick="openCreateShowModal()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-sm transition">
+      + Criar Show
+    </button>
 
-    <!-- HEADER -->
-    <div class="flex items-center justify-between mb-8">
-      <div class="flex items-center gap-3">
-        <button onclick="toggleMenu()" class="md:hidden text-3xl text-green-700 leading-none">
-          ☰
-        </button>
-        <div>
-          <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p class="text-sm md:text-base text-gray-500">Visão geral da sua agenda</p>
+    <!-- MENU USUÁRIO -->
+    <div class="relative">
+
+      <button id="userMenuBtn" class="flex items-center gap-3 bg-white border border-green-100 px-3 py-2 rounded-2xl hover:shadow-sm transition">
+        
+        <div id="userAvatar" class="w-9 h-9 rounded-xl bg-green-600 text-white flex items-center justify-center font-semibold">
+          U
         </div>
-      </div>
 
-      <button onclick="openCreateShowModal()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-sm transition">
-        + Criar Show
+        <span id="userName" class="text-sm font-medium text-gray-700 hidden md:block">
+          Usuário
+        </span>
+
+        <span class="text-gray-400">⌄</span>
       </button>
+
+      <!-- DROPDOWN -->
+      <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-white border border-green-100 rounded-2xl shadow-lg overflow-hidden z-50">
+        
+        <button class="w-full text-left px-4 py-3 text-sm hover:bg-gray-50">
+          Meu perfil
+        </button>
+
+        <button id="logoutBtn" class="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50">
+          Sair
+        </button>
+
+      </div>
+
     </div>
 
-    <!-- 👇 NOVO BLOCO BONITO (BEM-VINDO) -->
-    <div class="mb-8">
-      <div class="bg-white border border-green-100 rounded-3xl shadow-sm px-6 py-5">
-        <p class="text-sm uppercase tracking-[0.18em] text-green-600 font-semibold mb-2">
-          Agenda Lux
-        </p>
-        <h2 id="welcomeUser" class="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
-          Seja bem vindo.
-        </h2>
-        <p class="text-gray-500 mt-2 text-sm md:text-base">
-          Aqui está um resumo da sua agenda e dos seus próximos shows.
-        </p>
-      </div>
-    </div>
-
-    <!-- CARDS -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
-        <p class="text-gray-500 text-sm mb-2">Shows este mês</p>
-        <h3 id="showsThisMonth" class="text-4xl font-bold text-gray-900">0</h3>
-      </div>
-
-      <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
-        <p class="text-gray-500 text-sm mb-2">Próximos shows</p>
-        <h3 id="upcomingCount" class="text-4xl font-bold text-gray-900">0</h3>
-      </div>
-
-      <div class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
-        <p class="text-gray-500 text-sm mb-2">Cidades agendadas</p>
-        <h3 id="citiesCount" class="text-4xl font-bold text-gray-900">0</h3>
-      </div>
-    </section>
-
-    <!-- PRÓXIMOS SHOWS -->
-    <section class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm mb-8">
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-2xl font-bold text-gray-900">Próximos Shows</h2>
-        <a href="calendario.html" class="text-green-700 text-sm font-medium hover:underline">Ver calendário</a>
-      </div>
-
-      <div id="upcomingShowsList" class="space-y-4">
-        <div class="text-gray-400 text-sm">Carregando shows...</div>
-      </div>
-    </section>
-
-    <!-- RESUMO -->
-    <section class="bg-white rounded-3xl p-6 border border-green-100 shadow-sm">
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-2xl font-bold text-gray-900">Resumo rápido</h2>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-green-50/70 border border-green-100 rounded-2xl p-4">
-          <p class="text-gray-500 text-sm mb-1">Próxima data</p>
-          <p id="nextShowDate" class="font-semibold text-gray-900">—</p>
-        </div>
-
-        <div class="bg-white border border-green-100 rounded-2xl p-4">
-          <p class="text-gray-500 text-sm mb-1">Próxima cidade</p>
-          <p id="nextShowCity" class="font-semibold text-gray-900">—</p>
-        </div>
-
-        <div class="bg-white border border-green-100 rounded-2xl p-4">
-          <p class="text-gray-500 text-sm mb-1">Próximo título</p>
-          <p id="nextShowTitle" class="font-semibold text-gray-900">—</p>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <div id="create-show-modal-container"></div>
-
-  <script src="assets/menu.js"></script>
-  <script type="module" src="assets/create-show-modal.js"></script>
-  <script type="module" src="assets/dashboard.js"></script>
-
-</body>
-</html>
+  </div>
+</div>

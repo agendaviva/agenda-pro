@@ -1,5 +1,17 @@
 import { supabase } from './supabase.js'
 
+async function getUser() {
+  const { data, error } = await supabase.auth.getUser()
+
+  if (error || !data.user) {
+    alert('Você precisa estar logado')
+    window.location.href = 'login.html'
+    return null
+  }
+
+  return data.user
+}
+
 function formatShowTime(horario) {
   return horario && horario.trim() ? horario : 'Horário não definido'
 }
@@ -39,10 +51,14 @@ function renderShowCard(show) {
     const confirmar = confirm('Excluir esse show?')
     if (!confirmar) return
 
+    const user = await getUser()
+    if (!user) return
+
     const { error } = await supabase
       .from('shows')
       .delete()
       .eq('id', show.id)
+      .eq('user_id', user.id)
 
     if (error) {
       alert('Erro ao excluir')
@@ -50,6 +66,7 @@ function renderShowCard(show) {
     }
 
     removeShowFromCalendar(show.id, show.data)
+    window.dispatchEvent(new CustomEvent('showsChanged'))
   })
 
   return el
@@ -111,9 +128,13 @@ function updateShowInCalendar(oldShow, updatedShow) {
 }
 
 async function loadShows() {
+  const user = await getUser()
+  if (!user) return
+
   const { data: shows, error } = await supabase
     .from('shows')
     .select('*')
+    .eq('user_id', user.id)
 
   if (error) {
     alert('Erro ao buscar shows')

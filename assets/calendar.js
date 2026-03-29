@@ -13,7 +13,7 @@ async function getUser() {
 }
 
 function formatShowTime(horario) {
-  return horario && horario.trim() ? horario : ''
+  return horario && horario.trim() ? horario : 'Nao definido'
 }
 
 function renderShowCard(show) {

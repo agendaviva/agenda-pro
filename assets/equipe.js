@@ -18,6 +18,7 @@ const pendingInvitesListEl = document.getElementById('pendingInvitesList')
 
 let currentUser = null
 let activeProjectId = null
+let currentUserRole = null
 
 function setMessage(el, text, type = 'default') {
   if (!el) return
@@ -68,6 +69,10 @@ function roleBadgeClass(role) {
   return 'bg-gray-100 text-gray-700 border border-gray-200'
 }
 
+function canManageTeam() {
+  return currentUserRole === 'admin'
+}
+
 function renderTeamList(members) {
   if (!teamListEl) return
 
@@ -89,22 +94,60 @@ function renderTeamList(members) {
 
     const memberEmail = member.profiles?.email || 'Sem e-mail'
     const role = member.role || 'viewer'
+    const isSelf = member.user_id === currentUser?.id
+    const canManage = canManageTeam() && !isSelf && role !== 'admin'
 
     return `
-      <div class="border border-green-100 rounded-2xl p-4 bg-white flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div class="border border-green-100 rounded-2xl p-4 bg-white flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <p class="font-semibold text-gray-900">${memberName}</p>
           <p class="text-sm text-gray-500">${memberEmail}</p>
         </div>
 
-        <div class="flex items-center gap-3">
-          <span class="px-3 py-1 rounded-full text-sm font-medium ${roleBadgeClass(role)}">
+        <div class="flex flex-col lg:items-end gap-3">
+          <span class="px-3 py-1 rounded-full text-sm font-medium ${roleBadgeClass(role)} w-fit">
             ${formatRole(role)}
           </span>
+
+          ${
+            canManage
+              ? `
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    data-change-role="${member.id}"
+                    data-role="editor"
+                    class="px-3 py-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 text-sm font-semibold hover:bg-blue-100"
+                  >
+                    Editor
+                  </button>
+
+                  <button
+                    type="button"
+                    data-change-role="${member.id}"
+                    data-role="viewer"
+                    class="px-3 py-2 rounded-xl bg-gray-50 text-gray-700 border border-gray-200 text-sm font-semibold hover:bg-gray-100"
+                  >
+                    Visualizador
+                  </button>
+
+                  <button
+                    type="button"
+                    data-remove-member="${member.id}"
+                    class="px-3 py-2 rounded-xl bg-red-50 text-red-600 border border-red-200 text-sm font-semibold hover:bg-red-100"
+                  >
+                    Remover
+                  </button>
+                </div>
+              `
+              : ''
+          }
         </div>
       </div>
     `
   }).join('')
+
+  bindMemberActions()
 }
 
 function renderPendingInvites(invites) {
@@ -166,6 +209,7 @@ async function loadProjectInfo() {
 async function loadCurrentUserRole() {
   if (!currentUser || !activeProjectId) {
     currentUserRoleEl.textContent = '—'
+    currentUserRole = null
     return
   }
 
@@ -178,9 +222,11 @@ async function loadCurrentUserRole() {
 
   if (error || !data) {
     currentUserRoleEl.textContent = '—'
+    currentUserRole = null
     return
   }
 
+  currentUserRole = data.role || null
   currentUserRoleEl.textContent = formatRole(data.role)
 }
 
@@ -326,6 +372,58 @@ async function copyInviteLink() {
     console.error(error)
     setMessage(inviteMessageEl, 'Não foi possível copiar o link.', 'error')
   }
+}
+
+async function changeMemberRole(memberId, role) {
+  const { error } = await supabase
+    .from('project_members')
+    .update({ role })
+    .eq('id', memberId)
+    .eq('project_id', activeProjectId)
+
+  if (error) {
+    console.error('Erro ao alterar função:', error)
+    alert('Erro ao alterar função do membro.')
+    return
+  }
+
+  await loadTeamMembers()
+}
+
+async function removeMember(memberId) {
+  const confirmed = window.confirm('Tem certeza que deseja remover este membro da equipe?')
+  if (!confirmed) return
+
+  const { error } = await supabase
+    .from('project_members')
+    .delete()
+    .eq('id', memberId)
+    .eq('project_id', activeProjectId)
+
+  if (error) {
+    console.error('Erro ao remover membro:', error)
+    alert('Erro ao remover membro.')
+    return
+  }
+
+  await loadTeamMembers()
+}
+
+function bindMemberActions() {
+  document.querySelectorAll('[data-change-role]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const memberId = btn.dataset.changeRole
+      const role = btn.dataset.role
+      await changeMemberRole(memberId, role)
+    })
+  })
+
+  document.querySelectorAll('[data-remove-member]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const memberId = btn.dataset.removeMember
+      await removeMember(memberId)
+    })
+  })
 }
 
 async function initPage() {

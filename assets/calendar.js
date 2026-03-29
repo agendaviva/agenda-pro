@@ -1,14 +1,12 @@
-import { supabase } from './supabase.js'
+function groupShowsByDate(shows) {
+  const grouped = {}
 
-export async function loadShows() {
-  const { data, error } = await supabase
-    .from('shows')
-    .select('*')
+  shows.forEach(show => {
+    if (!grouped[show.data]) {
+      grouped[show.data] = []
+    }
+    grouped[show.data].push(show)
+  })
 
-  if (error) {
-    console.error('Erro ao buscar shows:', error)
-    return []
-  }
-
-  return data
+  return grouped
 }

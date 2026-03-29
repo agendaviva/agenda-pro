@@ -98,14 +98,22 @@ container.innerHTML = `
                 <input id="showCity" type="text" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
-              <div class="md:col-span-2">
-                <label class="block mb-2 text-sm font-medium text-gray-700">Título</label>
-                <input id="showTitle" type="text" class="w-full h-12 px-3 border rounded-xl">
+              <div>
+                <label class="block mb-2 text-sm font-medium text-gray-700">Status</label>
+                <select id="showStatus" class="w-full h-12 px-3 border rounded-xl bg-white">
+                  <option value="reserva">Reserva</option>
+                  <option value="confirmado">Confirmado</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block mb-2 text-sm font-medium text-gray-700">Contratante</label>
+                <input id="showContractor" type="text" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div class="md:col-span-2">
-                <label class="block mb-2 text-sm font-medium text-gray-700">Contratante</label>
-                <input id="showContractor" type="text" class="w-full h-12 px-3 border rounded-xl">
+                <label class="block mb-2 text-sm font-medium text-gray-700">Título</label>
+                <input id="showTitle" type="text" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div class="md:col-span-2">
@@ -144,6 +152,7 @@ function getModalEls() {
     time: document.getElementById('showTime'),
     city: document.getElementById('showCity'),
     state: document.getElementById('showState'),
+    status: document.getElementById('showStatus'),
     titleInput: document.getElementById('showTitle'),
     contractor: document.getElementById('showContractor'),
     notes: document.getElementById('showNotes')
@@ -159,6 +168,7 @@ function resetForm() {
   els.time.value = ''
   els.city.value = ''
   els.state.value = ''
+  els.status.value = 'reserva'
   els.titleInput.value = ''
   els.contractor.value = ''
   els.notes.value = ''
@@ -178,6 +188,7 @@ function setReadOnly(readOnly) {
     els.time,
     els.city,
     els.state,
+    els.status,
     els.titleInput,
     els.contractor,
     els.notes
@@ -203,6 +214,7 @@ function fillForm(show, date = '') {
   els.time.value = show?.horario || ''
   els.city.value = show?.cidade || ''
   els.state.value = show?.estado || ''
+  els.status.value = show?.status || 'reserva'
   els.titleInput.value = show?.titulo || ''
   els.contractor.value = show?.contratante || ''
   els.notes.value = show?.observacoes || ''
@@ -270,6 +282,7 @@ async function saveShow() {
   const horario = els.time.value || null
   const cidade = els.city.value
   const estado = els.state.value
+  const status = els.status.value || 'reserva'
   const titulo = els.titleInput.value
   const contratante = els.contractor.value
   const observacoes = els.notes.value
@@ -298,6 +311,7 @@ async function saveShow() {
         horario,
         cidade,
         estado,
+        status,
         titulo,
         contratante,
         observacoes
@@ -320,6 +334,7 @@ async function saveShow() {
         horario,
         cidade,
         estado,
+        status,
         titulo,
         contratante,
         observacoes

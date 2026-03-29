@@ -1,404 +1,153 @@
 import { supabase } from './supabase.js'
 
-let editingId = null
-let editingOriginalShow = null
-let currentUserRole = null
-
-function getActiveProjectId() {
-  return localStorage.getItem('activeProjectId')
-}
-
-async function getUser() {
-  const { data, error } = await supabase.auth.getUser()
-
-  if (error || !data.user) {
-    window.location.href = 'login.html'
-    return null
-  }
-
-  return data.user
-}
-
-async function loadCurrentUserRole() {
-  const user = await getUser()
-  if (!user) return null
-
-  const projectId = getActiveProjectId()
-  if (!projectId) return null
-
-  const { data, error } = await supabase
-    .from('project_members')
-    .select('role')
-    .eq('project_id', projectId)
-    .eq('user_id', user.id)
-    .single()
-
-  if (error || !data) {
-    currentUserRole = null
-    return null
-  }
-
-  currentUserRole = data.role || null
-  return currentUserRole
-}
-
-function canManageAgenda() {
-  return currentUserRole === 'admin' || currentUserRole === 'editor'
-}
-
 const container = document.getElementById('create-show-modal-container')
 
-container.innerHTML = `
-  <div id="createShowModal" class="fixed inset-0 hidden z-[70]">
-    <div id="modalBackdrop" class="absolute inset-0 bg-black/45"></div>
+window.openCreateShowModal = function (date = null, show = null) {
+  const isEdit = !!show
 
-    <div class="relative z-10 h-full w-full overflow-y-auto">
-      <div class="min-h-full flex items-start md:items-center justify-center p-3 md:p-6">
-        <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-green-100 my-4 md:my-8 max-h-[92vh] flex flex-col">
-          
-          <div class="flex items-center justify-between px-5 py-4 border-b">
-            <h3 id="modalTitle" class="text-2xl font-light text-gray-700">Novo show</h3>
-            <button type="button" id="closeModalBtn" class="text-3xl text-gray-400 hover:text-gray-700">&times;</button>
+  const estadoAtual = show?.estado || ''
+  const cidadeAtual = show?.cidade || ''
+  const tituloAtual = show?.titulo || ''
+  const horarioAtual = show?.horario || ''
+  const statusAtual = show?.status || 'reserva'
+
+  container.innerHTML = `
+    <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      
+      <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+
+        <h2 class="text-xl font-bold mb-4">
+          ${isEdit ? 'Editar Show' : 'Novo Show'}
+        </h2>
+
+        <form id="show-form" class="space-y-4">
+
+          <!-- TÍTULO -->
+          <input
+            type="text"
+            id="titulo"
+            placeholder="Título"
+            value="${tituloAtual}"
+            class="w-full border rounded-xl px-4 py-3"
+            required
+          />
+
+          <!-- HORÁRIO -->
+          <input
+            type="time"
+            id="horario"
+            value="${horarioAtual}"
+            class="w-full border rounded-xl px-4 py-3"
+          />
+
+          <!-- CIDADE -->
+          <input
+            type="text"
+            id="cidade"
+            placeholder="Cidade"
+            value="${cidadeAtual}"
+            class="w-full border rounded-xl px-4 py-3"
+          />
+
+          <!-- ESTADO (NOVO SELECT) -->
+          <select id="estado" class="w-full border rounded-xl px-4 py-3 bg-white">
+            <option value="">Selecione o estado</option>
+            ${[
+              ['AC','Acre'],['AL','Alagoas'],['AP','Amapá'],['AM','Amazonas'],
+              ['BA','Bahia'],['CE','Ceará'],['DF','Distrito Federal'],
+              ['ES','Espírito Santo'],['GO','Goiás'],['MA','Maranhão'],
+              ['MT','Mato Grosso'],['MS','Mato Grosso do Sul'],
+              ['MG','Minas Gerais'],['PA','Pará'],['PB','Paraíba'],
+              ['PR','Paraná'],['PE','Pernambuco'],['PI','Piauí'],
+              ['RJ','Rio de Janeiro'],['RN','Rio Grande do Norte'],
+              ['RS','Rio Grande do Sul'],['RO','Rondônia'],['RR','Roraima'],
+              ['SC','Santa Catarina'],['SP','São Paulo'],['SE','Sergipe'],
+              ['TO','Tocantins']
+            ].map(([uf, nome]) => `
+              <option value="${uf}" ${estadoAtual === uf ? 'selected' : ''}>
+                ${nome}
+              </option>
+            `).join('')}
+          </select>
+
+          <!-- STATUS -->
+          <select id="status" class="w-full border rounded-xl px-4 py-3">
+            <option value="reserva" ${statusAtual === 'reserva' ? 'selected' : ''}>Reserva</option>
+            <option value="confirmado" ${statusAtual === 'confirmado' ? 'selected' : ''}>Confirmado</option>
+          </select>
+
+          <!-- BOTÕES -->
+          <div class="flex gap-2 mt-4">
+
+            <button
+              type="submit"
+              class="flex-1 bg-green-600 text-white py-3 rounded-xl"
+            >
+              Salvar
+            </button>
+
+            <button
+              type="button"
+              id="cancel-btn"
+              class="flex-1 bg-gray-200 py-3 rounded-xl"
+            >
+              Cancelar
+            </button>
+
           </div>
 
-          <div class="overflow-y-auto px-5 py-6">
-
-            <div class="flex items-center justify-between mb-5">
-              <div>
-                <p class="text-sm text-gray-500" id="modalSubtitle">Gerencie os dados do show</p>
-              </div>
-
-              <button
-                id="deleteShowBtn"
-                type="button"
-                class="hidden bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-xl text-sm font-medium transition"
-              >
-                Excluir data
-              </button>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-5">
-              <div>
-                <label class="block mb-2 text-sm font-medium text-gray-700">Data</label>
-                <input id="showDate" type="date" class="w-full h-12 px-3 border rounded-xl">
-              </div>
-
-              <div>
-                <label class="block mb-2 text-sm font-medium text-gray-700">Horário</label>
-                <input id="showTime" type="time" class="w-full h-12 px-3 border rounded-xl">
-              </div>
-
-              <div>
-                <label class="block mb-2 text-sm font-medium text-gray-700">Estado</label>
-                <input id="showState" type="text" class="w-full h-12 px-3 border rounded-xl">
-              </div>
-
-              <div>
-                <label class="block mb-2 text-sm font-medium text-gray-700">Cidade</label>
-                <input id="showCity" type="text" class="w-full h-12 px-3 border rounded-xl">
-              </div>
-
-              <div>
-                <label class="block mb-2 text-sm font-medium text-gray-700">Status</label>
-                <select id="showStatus" class="w-full h-12 px-3 border rounded-xl bg-white">
-                  <option value="reserva">Reserva</option>
-                  <option value="confirmado">Confirmado</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block mb-2 text-sm font-medium text-gray-700">Contratante</label>
-                <input id="showContractor" type="text" class="w-full h-12 px-3 border rounded-xl">
-              </div>
-
-              <div class="md:col-span-2">
-                <label class="block mb-2 text-sm font-medium text-gray-700">Título</label>
-                <input id="showTitle" type="text" class="w-full h-12 px-3 border rounded-xl">
-              </div>
-
-              <div class="md:col-span-2">
-                <label class="block mb-2 text-sm font-medium text-gray-700">Observações</label>
-                <textarea id="showNotes" class="w-full p-3 border rounded-xl"></textarea>
-              </div>
-            </div>
-
-            <div class="text-center mt-6">
-              <button
-                id="saveShowBtn"
-                type="button"
-                class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl"
-              >
-                Salvar
-              </button>
-            </div>
-
-          </div>
-        </div>
+        </form>
       </div>
     </div>
-  </div>
-`
+  `
 
-function getModalEls() {
-  return {
-    modal: document.getElementById('createShowModal'),
-    backdrop: document.getElementById('modalBackdrop'),
-    title: document.getElementById('modalTitle'),
-    subtitle: document.getElementById('modalSubtitle'),
-    closeBtn: document.getElementById('closeModalBtn'),
-    deleteBtn: document.getElementById('deleteShowBtn'),
-    saveBtn: document.getElementById('saveShowBtn'),
-    date: document.getElementById('showDate'),
-    time: document.getElementById('showTime'),
-    city: document.getElementById('showCity'),
-    state: document.getElementById('showState'),
-    status: document.getElementById('showStatus'),
-    titleInput: document.getElementById('showTitle'),
-    contractor: document.getElementById('showContractor'),
-    notes: document.getElementById('showNotes')
-  }
-}
-
-function resetForm() {
-  const els = getModalEls()
-  editingId = null
-  editingOriginalShow = null
-
-  els.date.value = ''
-  els.time.value = ''
-  els.city.value = ''
-  els.state.value = ''
-  els.status.value = 'reserva'
-  els.titleInput.value = ''
-  els.contractor.value = ''
-  els.notes.value = ''
-
-  els.title.textContent = 'Novo show'
-  els.subtitle.textContent = 'Gerencie os dados do show'
-  els.deleteBtn.classList.add('hidden')
-  els.saveBtn.classList.remove('hidden')
-
-  setReadOnly(false)
-}
-
-function setReadOnly(readOnly) {
-  const els = getModalEls()
-  const fields = [
-    els.date,
-    els.time,
-    els.city,
-    els.state,
-    els.status,
-    els.titleInput,
-    els.contractor,
-    els.notes
-  ]
-
-  fields.forEach(field => {
-    field.disabled = readOnly
-    field.classList.toggle('bg-gray-50', readOnly)
-    field.classList.toggle('text-gray-500', readOnly)
-    field.classList.toggle('cursor-not-allowed', readOnly)
-  })
-
-  if (readOnly) {
-    els.saveBtn.classList.add('hidden')
-    els.deleteBtn.classList.add('hidden')
-    els.subtitle.textContent = 'Modo visualização'
-  }
-}
-
-function fillForm(show, date = '') {
-  const els = getModalEls()
-  els.date.value = show?.data || date || ''
-  els.time.value = show?.horario || ''
-  els.city.value = show?.cidade || ''
-  els.state.value = show?.estado || ''
-  els.status.value = show?.status || 'reserva'
-  els.titleInput.value = show?.titulo || ''
-  els.contractor.value = show?.contratante || ''
-  els.notes.value = show?.observacoes || ''
-}
-
-function openModal() {
-  const { modal } = getModalEls()
-  modal.classList.remove('hidden')
-  document.body.classList.add('overflow-hidden')
-}
-
-function closeCreateShowModal() {
-  const { modal } = getModalEls()
-  modal.classList.add('hidden')
-  document.body.classList.remove('overflow-hidden')
-  resetForm()
-}
-
-function emitShowsChanged() {
-  window.dispatchEvent(new CustomEvent('showsChanged'))
-}
-
-async function openCreateShowModal(date = '', show = null) {
-  await loadCurrentUserRole()
-
-  if (!show && !canManageAgenda()) {
-    alert('Você só pode visualizar a agenda.')
-    return
+  document.getElementById('cancel-btn').onclick = () => {
+    container.innerHTML = ''
   }
 
-  resetForm()
+  document.getElementById('show-form').onsubmit = async (e) => {
+    e.preventDefault()
 
-  if (show) {
-    editingId = show.id
-    editingOriginalShow = { ...show }
-    fillForm(show)
+    const titulo = document.getElementById('titulo').value
+    const horario = document.getElementById('horario').value
+    const cidade = document.getElementById('cidade').value
+    const estado = document.getElementById('estado').value
+    const status = document.getElementById('status').value
 
-    const els = getModalEls()
-    els.title.textContent = canManageAgenda() ? 'Editar show' : 'Detalhes do show'
+    const activeProjectId = localStorage.getItem('activeProjectId')
 
-    if (canManageAgenda()) {
-      els.deleteBtn.classList.remove('hidden')
+    if (!activeProjectId) {
+      alert('Projeto não selecionado')
+      return
+    }
+
+    if (isEdit) {
+      await supabase
+        .from('shows')
+        .update({
+          titulo,
+          horario,
+          cidade,
+          estado,
+          status
+        })
+        .eq('id', show.id)
     } else {
-      setReadOnly(true)
+      await supabase
+        .from('shows')
+        .insert({
+          titulo,
+          horario,
+          cidade,
+          estado,
+          status,
+          data: date,
+          project_id: activeProjectId
+        })
     }
-  } else {
-    fillForm(null, date)
-  }
 
-  openModal()
+    container.innerHTML = ''
+
+    window.dispatchEvent(new Event('showsChanged'))
+  }
 }
-
-async function saveShow() {
-  await loadCurrentUserRole()
-
-  if (!canManageAgenda()) {
-    alert('Você não tem permissão para alterar a agenda.')
-    closeCreateShowModal()
-    return
-  }
-
-  const els = getModalEls()
-
-  const data = els.date.value
-  const horario = els.time.value || null
-  const cidade = els.city.value
-  const estado = els.state.value
-  const status = els.status.value || 'reserva'
-  const titulo = els.titleInput.value
-  const contratante = els.contractor.value
-  const observacoes = els.notes.value
-
-  if (!data) {
-    alert('Preencha a data')
-    return
-  }
-
-  const user = await getUser()
-  if (!user) return
-
-  const projectId = getActiveProjectId()
-  if (!projectId) {
-    alert('Nenhuma agenda selecionada')
-    return
-  }
-
-  let error = null
-
-  if (editingId) {
-    const res = await supabase
-      .from('shows')
-      .update({
-        data,
-        horario,
-        cidade,
-        estado,
-        status,
-        titulo,
-        contratante,
-        observacoes
-      })
-      .eq('id', editingId)
-      .select()
-      .single()
-
-    error = res.error
-
-    if (!error && window.updateShowInCalendar && editingOriginalShow) {
-      window.updateShowInCalendar(editingOriginalShow, res.data)
-    }
-  } else {
-    const res = await supabase
-      .from('shows')
-      .insert([{
-        project_id: projectId,
-        data,
-        horario,
-        cidade,
-        estado,
-        status,
-        titulo,
-        contratante,
-        observacoes
-      }])
-      .select()
-      .single()
-
-    error = res.error
-
-    if (!error && window.addShowToCalendar) {
-      window.addShowToCalendar(res.data)
-    }
-  }
-
-  if (error) {
-    alert('Erro ao salvar')
-    console.error(error)
-    return
-  }
-
-  closeCreateShowModal()
-  emitShowsChanged()
-}
-
-async function deleteCurrentShow() {
-  await loadCurrentUserRole()
-
-  if (!canManageAgenda()) {
-    alert('Você não tem permissão para excluir.')
-    closeCreateShowModal()
-    return
-  }
-
-  if (!editingId) return
-
-  const confirmar = confirm('Excluir essa data?')
-  if (!confirmar) return
-
-  const { error } = await supabase
-    .from('shows')
-    .delete()
-    .eq('id', editingId)
-
-  if (error) {
-    alert('Erro ao excluir')
-    return
-  }
-
-  if (window.removeShowFromCalendar && editingOriginalShow) {
-    window.removeShowFromCalendar(editingId, editingOriginalShow.data)
-  }
-
-  closeCreateShowModal()
-  emitShowsChanged()
-}
-
-const els = getModalEls()
-els.closeBtn.addEventListener('click', closeCreateShowModal)
-els.backdrop.addEventListener('click', closeCreateShowModal)
-els.saveBtn.addEventListener('click', saveShow)
-els.deleteBtn.addEventListener('click', deleteCurrentShow)
-
-window.openCreateShowModal = openCreateShowModal
-window.closeCreateShowModal = closeCreateShowModal
-window.saveShow = saveShow
-window.deleteCurrentShow = deleteCurrentShow
-window.attemptCloseModal = closeCreateShowModal

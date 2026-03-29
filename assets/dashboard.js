@@ -22,9 +22,7 @@ function sortShows(shows) {
     const dateA = normalizeDateOnly(a.data)
     const dateB = normalizeDateOnly(b.data)
 
-    if (dateA !== dateB) {
-      return dateA.localeCompare(dateB)
-    }
+    if (dateA !== dateB) return dateA.localeCompare(dateB)
 
     const timeA = a.horario || '99:99'
     const timeB = b.horario || '99:99'
@@ -44,7 +42,7 @@ function renderUpcomingShows(shows) {
     return
   }
 
-  list.innerHTML = shows.map(show => `
+  list.innerHTML = shows.map((show, index) => `
     <div class="bg-white border border-green-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
       <div>
         <p class="font-semibold text-lg text-gray-900">
@@ -59,17 +57,19 @@ function renderUpcomingShows(shows) {
       </div>
 
       <button
-        onclick="openCreateShowModal(null, ${encodeURIComponent(JSON.stringify(show)).replace(/'/g, '%27')})"
-        class="bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-xl text-sm font-medium transition"
+        class="edit-show-btn bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-xl text-sm font-medium transition"
+        data-index="${index}"
       >
         Editar
       </button>
     </div>
   `).join('')
 
-  // Corrige o onclick para objeto real
-  list.querySelectorAll('button').forEach((button, index) => {
-    button.onclick = () => window.openCreateShowModal(null, shows[index])
+  list.querySelectorAll('.edit-show-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.index)
+      window.openCreateShowModal(null, shows[index])
+    })
   })
 }
 
@@ -132,5 +132,7 @@ async function loadDashboard() {
 
   updateSummary(shows || [])
 }
+
+window.addEventListener('showsChanged', loadDashboard)
 
 loadDashboard()

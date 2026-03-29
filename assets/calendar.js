@@ -1,136 +1,152 @@
 import { supabase } from './supabase.js'
 
-function formatDateBR(dateString) {
-  const [year, month, day] = String(dateString).split('T')[0].split('-')
-  return `${day}/${month}/${year}`
+function formatShowTime(horario) {
+  return horario && horario.trim() ? horario : 'Ainda não definido'
 }
 
-function normalizeDateOnly(dateString) {
-  return String(dateString).split('T')[0]
-}
+function renderShowCard(show) {
+  const el = document.createElement('div')
 
-function getTodayLocal() {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
+  el.className =
+    'bg-white border rounded-xl p-2 mt-2 text-sm flex justify-between items-start cursor-pointer hover:bg-green-50 transition'
 
-function sortShows(shows) {
-  return [...shows].sort((a, b) => {
-    const dateA = normalizeDateOnly(a.data)
-    const dateB = normalizeDateOnly(b.data)
+  el.dataset.showId = show.id
 
-    if (dateA !== dateB) {
-      return dateA.localeCompare(dateB)
+  el.innerHTML = `
+    <div>
+      <p class="font-semibold text-gray-900">
+        ${formatShowTime(show.horario)} - ${show.cidade || ''}/${show.estado || ''}
+      </p>
+      <p class="text-xs text-gray-500 mt-1">
+        ${show.titulo || ''}
+      </p>
+    </div>
+
+    <button class="delete-btn text-red-500 hover:text-red-700 text-lg font-bold ml-2">
+      🗑️
+    </button>
+  `
+
+  el.addEventListener('click', () => {
+    window.openCreateShowModal(null, show)
+  })
+
+  const deleteBtn = el.querySelector('.delete-btn')
+
+  deleteBtn.addEventListener('click', async (e) => {
+    e.stopPropagation()
+
+    const confirmar = confirm('Excluir esse show?')
+    if (!confirmar) return
+
+    const { error } = await supabase
+      .from('shows')
+      .delete()
+      .eq('id', show.id)
+
+    if (error) {
+      alert('Erro ao excluir')
+      return
     }
 
-    const timeA = a.horario || '99:99'
-    const timeB = b.horario || '99:99'
-    return timeA.localeCompare(timeB)
+    removeShowFromCalendar(show.id, show.data)
   })
+
+  return el
 }
 
-function renderUpcomingShows(shows) {
-  const list = document.getElementById('upcomingShowsList')
+function ensureEmptyState(container) {
+  if (!container.querySelector('[data-show-id]')) {
+    container.innerHTML = '<span class="text-gray-400">Sem eventos</span>'
+  }
+}
 
-  if (!shows.length) {
-    list.innerHTML = `
-      <div class="text-gray-400 text-sm">
-        Nenhum próximo show encontrado.
-      </div>
-    `
+function removeEmptyState(container) {
+  const text = container.textContent.trim()
+  if (text === 'Sem eventos') {
+    container.innerHTML = ''
+  }
+}
+
+function getDayContainerByDate(date) {
+  const cleanDate = String(date).split('T')[0]
+  const day = document.querySelector(`[data-date="${cleanDate}"]`)
+  if (!day) return null
+  return day.querySelector('.events-container')
+}
+
+function addShowToCalendar(show) {
+  const container = getDayContainerByDate(show.data)
+  if (!container) return
+
+  removeEmptyState(container)
+  container.appendChild(renderShowCard(show))
+}
+
+function removeShowFromCalendar(showId, date) {
+  const container = getDayContainerByDate(date)
+  if (!container) return
+
+  const card = container.querySelector(`[data-show-id="${showId}"]`)
+  if (card) card.remove()
+
+  ensureEmptyState(container)
+}
+
+function updateShowInCalendar(oldShow, updatedShow) {
+  const oldDate = String(oldShow.data).split('T')[0]
+  const newDate = String(updatedShow.data).split('T')[0]
+
+  if (oldDate !== newDate) {
+    removeShowFromCalendar(oldShow.id, oldDate)
+    addShowToCalendar(updatedShow)
     return
   }
 
-  list.innerHTML = shows.map(show => `
-    <div class="bg-white border border-green-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-      <div>
-        <p class="font-semibold text-lg text-gray-900">
-          ${formatDateBR(show.data)}${show.horario ? ` • ${show.horario}` : ''}
-        </p>
-        <p class="text-gray-700">
-          ${show.cidade || 'Cidade não definida'}${show.estado ? `/${show.estado}` : ''}
-        </p>
-        <p class="text-gray-500 text-sm">
-          ${show.titulo || 'Sem título'}
-        </p>
-      </div>
+  const container = getDayContainerByDate(oldDate)
+  if (!container) return
 
-      <button
-        onclick="openCreateShowModal(null, ${encodeURIComponent(JSON.stringify(show)).replace(/'/g, '%27')})"
-        class="bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-xl text-sm font-medium transition"
-      >
-        Editar
-      </button>
-    </div>
-  `).join('')
-
-  // Corrige o onclick para objeto real
-  list.querySelectorAll('button').forEach((button, index) => {
-    button.onclick = () => window.openCreateShowModal(null, shows[index])
-  })
+  const oldCard = container.querySelector(`[data-show-id="${oldShow.id}"]`)
+  if (oldCard) oldCard.replaceWith(renderShowCard(updatedShow))
 }
 
-function updateSummary(shows) {
-  const today = getTodayLocal()
-  const now = new Date()
-  const currentMonth = now.getMonth() + 1
-  const currentYear = now.getFullYear()
-
-  const sortedShows = sortShows(shows)
-
-  const upcomingShows = sortedShows.filter(show => normalizeDateOnly(show.data) >= today)
-
-  const showsThisMonth = shows.filter(show => {
-    const [year, month] = normalizeDateOnly(show.data).split('-').map(Number)
-    return year === currentYear && month === currentMonth
-  })
-
-  const uniqueCities = new Set(
-    shows
-      .map(show => `${show.cidade || ''}-${show.estado || ''}`)
-      .filter(city => city !== '-')
-  )
-
-  document.getElementById('showsThisMonth').textContent = showsThisMonth.length
-  document.getElementById('upcomingCount').textContent = upcomingShows.length
-  document.getElementById('citiesCount').textContent = uniqueCities.size
-
-  if (upcomingShows.length) {
-    const nextShow = upcomingShows[0]
-
-    document.getElementById('nextShowDate').textContent =
-      `${formatDateBR(nextShow.data)}${nextShow.horario ? ` • ${nextShow.horario}` : ''}`
-
-    document.getElementById('nextShowCity').textContent =
-      `${nextShow.cidade || '—'}${nextShow.estado ? `/${nextShow.estado}` : ''}`
-
-    document.getElementById('nextShowTitle').textContent =
-      nextShow.titulo || 'Sem título'
-  } else {
-    document.getElementById('nextShowDate').textContent = '—'
-    document.getElementById('nextShowCity').textContent = '—'
-    document.getElementById('nextShowTitle').textContent = '—'
-  }
-
-  renderUpcomingShows(upcomingShows.slice(0, 5))
-}
-
-async function loadDashboard() {
+async function loadShows() {
   const { data: shows, error } = await supabase
     .from('shows')
     .select('*')
 
   if (error) {
-    document.getElementById('upcomingShowsList').innerHTML = `
-      <div class="text-red-500 text-sm">Erro ao carregar shows.</div>
-    `
+    alert('Erro ao buscar shows')
     return
   }
 
-  updateSummary(shows || [])
+  document.querySelectorAll('.events-container').forEach(container => {
+    container.innerHTML = '<span class="text-gray-400">Sem eventos</span>'
+  })
+
+  const grouped = {}
+
+  shows.forEach(show => {
+    const date = String(show.data).split('T')[0]
+    if (!grouped[date]) grouped[date] = []
+    grouped[date].push(show)
+  })
+
+  Object.keys(grouped).forEach(date => {
+    const container = getDayContainerByDate(date)
+    if (!container) return
+
+    container.innerHTML = ''
+
+    grouped[date].forEach(show => {
+      container.appendChild(renderShowCard(show))
+    })
+  })
 }
 
-loadDashboard()
+window.loadShows = loadShows
+window.addShowToCalendar = addShowToCalendar
+window.removeShowFromCalendar = removeShowFromCalendar
+window.updateShowInCalendar = updateShowInCalendar
+
+loadShows()

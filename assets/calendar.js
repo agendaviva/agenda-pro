@@ -12,60 +12,75 @@ async function loadShows() {
 
   console.log('shows:', shows)
 
+  // 🔥 agrupa por data
+  const grouped = {}
+
   shows.forEach(show => {
     const date = show.data.split('T')[0]
 
+    if (!grouped[date]) {
+      grouped[date] = []
+    }
+
+    grouped[date].push(show)
+  })
+
+  // 🔥 percorre cada dia com evento
+  Object.keys(grouped).forEach(date => {
     const day = document.querySelector(`[data-date="${date}"]`)
     if (!day) return
 
     const container = day.querySelector('.events-container')
     if (!container) return
 
-    const el = document.createElement('div')
+    // 🔥 limpa "Sem eventos" UMA VEZ
+    container.innerHTML = ''
 
-    el.className =
-      'bg-white border rounded-xl p-2 mt-2 text-sm flex justify-between items-start'
+    grouped[date].forEach(show => {
+      const el = document.createElement('div')
 
-    el.innerHTML = `
-      <div>
-        <p class="font-semibold text-gray-900">
-          ${show.horario || ''} - ${show.cidade || ''}/${show.estado || ''}
-        </p>
-        <p class="text-xs text-gray-500 mt-1">
-          ${show.titulo || ''}
-        </p>
-      </div>
+      el.className =
+        'bg-white border rounded-xl p-2 mt-2 text-sm flex justify-between items-start'
 
-      <button class="delete-btn text-red-500 hover:text-red-700 text-lg font-bold ml-2">
-        🗑️
-      </button>
-    `
+      el.innerHTML = `
+        <div>
+          <p class="font-semibold text-gray-900">
+            ${show.horario || ''} - ${show.cidade || ''}/${show.estado || ''}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">
+            ${show.titulo || ''}
+          </p>
+        </div>
 
-    // 👉 botão de excluir (lixeira)
-    const deleteBtn = el.querySelector('.delete-btn')
+        <button class="delete-btn text-red-500 hover:text-red-700 text-lg font-bold ml-2">
+          🗑️
+        </button>
+      `
 
-    deleteBtn.addEventListener('click', async (e) => {
-      e.stopPropagation()
+      // excluir
+      const deleteBtn = el.querySelector('.delete-btn')
 
-      const confirmar = confirm('Excluir esse show?')
-      if (!confirmar) return
+      deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation()
 
-      const { error } = await supabase
-        .from('shows')
-        .delete()
-        .eq('id', show.id)
+        const confirmar = confirm('Excluir esse show?')
+        if (!confirmar) return
 
-      if (error) {
-        alert('Erro ao excluir')
-        console.error(error)
-        return
-      }
+        const { error } = await supabase
+          .from('shows')
+          .delete()
+          .eq('id', show.id)
 
-      alert('Show excluído!')
-      location.reload()
+        if (error) {
+          alert('Erro ao excluir')
+          return
+        }
+
+        location.reload()
+      })
+
+      container.appendChild(el)
     })
-
-    container.appendChild(el)
   })
 }
 

@@ -46,7 +46,9 @@ function canManageAgenda() {
   return currentUserRole === 'admin' || currentUserRole === 'editor'
 }
 
-document.getElementById('create-show-modal-container').innerHTML = `
+const container = document.getElementById('create-show-modal-container')
+
+container.innerHTML = `
   <div id="createShowModal" class="fixed inset-0 hidden z-[70]">
     <div id="modalBackdrop" class="absolute inset-0 bg-black/45"></div>
 
@@ -76,7 +78,6 @@ document.getElementById('create-show-modal-container').innerHTML = `
             </div>
 
             <div class="grid md:grid-cols-2 gap-5">
-
               <div>
                 <label class="block mb-2 text-sm font-medium text-gray-700">Data</label>
                 <input id="showDate" type="date" class="w-full h-12 px-3 border rounded-xl">
@@ -111,7 +112,6 @@ document.getElementById('create-show-modal-container').innerHTML = `
                 <label class="block mb-2 text-sm font-medium text-gray-700">Observações</label>
                 <textarea id="showNotes" class="w-full p-3 border rounded-xl"></textarea>
               </div>
-
             </div>
 
             <div class="text-center mt-6">
@@ -125,89 +125,100 @@ document.getElementById('create-show-modal-container').innerHTML = `
             </div>
 
           </div>
-
         </div>
       </div>
     </div>
   </div>
 `
 
-function getModal() {
-  return document.getElementById('createShowModal')
+function getModalEls() {
+  return {
+    modal: document.getElementById('createShowModal'),
+    backdrop: document.getElementById('modalBackdrop'),
+    title: document.getElementById('modalTitle'),
+    subtitle: document.getElementById('modalSubtitle'),
+    closeBtn: document.getElementById('closeModalBtn'),
+    deleteBtn: document.getElementById('deleteShowBtn'),
+    saveBtn: document.getElementById('saveShowBtn'),
+    date: document.getElementById('showDate'),
+    time: document.getElementById('showTime'),
+    city: document.getElementById('showCity'),
+    state: document.getElementById('showState'),
+    titleInput: document.getElementById('showTitle'),
+    contractor: document.getElementById('showContractor'),
+    notes: document.getElementById('showNotes')
+  }
 }
 
-function resetModalState() {
+function resetForm() {
+  const els = getModalEls()
   editingId = null
   editingOriginalShow = null
 
-  document.getElementById('showDate').value = ''
-  document.getElementById('showTime').value = ''
-  document.getElementById('showCity').value = ''
-  document.getElementById('showState').value = ''
-  document.getElementById('showTitle').value = ''
-  document.getElementById('showContractor').value = ''
-  document.getElementById('showNotes').value = ''
+  els.date.value = ''
+  els.time.value = ''
+  els.city.value = ''
+  els.state.value = ''
+  els.titleInput.value = ''
+  els.contractor.value = ''
+  els.notes.value = ''
 
-  document.getElementById('deleteShowBtn').classList.add('hidden')
-  document.getElementById('saveShowBtn').classList.remove('hidden')
-  document.getElementById('modalSubtitle').textContent = 'Gerencie os dados do show'
-  document.getElementById('modalTitle').textContent = 'Novo show'
+  els.title.textContent = 'Novo show'
+  els.subtitle.textContent = 'Gerencie os dados do show'
+  els.deleteBtn.classList.add('hidden')
+  els.saveBtn.classList.remove('hidden')
 
-  setReadOnlyMode(false)
+  setReadOnly(false)
 }
 
-function fillForm(show = null, date = '') {
-  document.getElementById('showDate').value = show?.data || date || ''
-  document.getElementById('showTime').value = show?.horario || ''
-  document.getElementById('showCity').value = show?.cidade || ''
-  document.getElementById('showState').value = show?.estado || ''
-  document.getElementById('showTitle').value = show?.titulo || ''
-  document.getElementById('showContractor').value = show?.contratante || ''
-  document.getElementById('showNotes').value = show?.observacoes || ''
-}
-
-function setReadOnlyMode(readOnly) {
+function setReadOnly(readOnly) {
+  const els = getModalEls()
   const fields = [
-    'showDate',
-    'showTime',
-    'showCity',
-    'showState',
-    'showTitle',
-    'showContractor',
-    'showNotes'
+    els.date,
+    els.time,
+    els.city,
+    els.state,
+    els.titleInput,
+    els.contractor,
+    els.notes
   ]
 
-  fields.forEach(id => {
-    const el = document.getElementById(id)
-    if (!el) return
-
-    el.disabled = readOnly
-
-    if (readOnly) {
-      el.classList.add('bg-gray-50', 'text-gray-500', 'cursor-not-allowed')
-    } else {
-      el.classList.remove('bg-gray-50', 'text-gray-500', 'cursor-not-allowed')
-    }
+  fields.forEach(field => {
+    field.disabled = readOnly
+    field.classList.toggle('bg-gray-50', readOnly)
+    field.classList.toggle('text-gray-500', readOnly)
+    field.classList.toggle('cursor-not-allowed', readOnly)
   })
 
-  document.getElementById('saveShowBtn').classList.toggle('hidden', readOnly)
-  document.getElementById('deleteShowBtn').classList.toggle('hidden', readOnly || !editingId)
-  document.getElementById('modalSubtitle').textContent = readOnly
-    ? 'Modo visualização'
-    : 'Gerencie os dados do show'
+  if (readOnly) {
+    els.saveBtn.classList.add('hidden')
+    els.deleteBtn.classList.add('hidden')
+    els.subtitle.textContent = 'Modo visualização'
+  }
 }
 
-function showModal() {
-  const modal = getModal()
+function fillForm(show, date = '') {
+  const els = getModalEls()
+  els.date.value = show?.data || date || ''
+  els.time.value = show?.horario || ''
+  els.city.value = show?.cidade || ''
+  els.state.value = show?.estado || ''
+  els.titleInput.value = show?.titulo || ''
+  els.contractor.value = show?.contratante || ''
+  els.notes.value = show?.observacoes || ''
+}
+
+function openModal() {
+  const { modal } = getModalEls()
   modal.classList.remove('hidden')
   document.body.classList.add('overflow-hidden')
 }
 
 function closeCreateShowModal() {
-  const modal = getModal()
+  const { modal } = getModalEls()
   modal.classList.add('hidden')
   document.body.classList.remove('overflow-hidden')
-  resetModalState()
+  resetForm()
 }
 
 function emitShowsChanged() {
@@ -215,7 +226,6 @@ function emitShowsChanged() {
 }
 
 async function openCreateShowModal(date = '', show = null) {
-  closeCreateShowModal()
   await loadCurrentUserRole()
 
   if (!show && !canManageAgenda()) {
@@ -223,50 +233,46 @@ async function openCreateShowModal(date = '', show = null) {
     return
   }
 
-  resetModalState()
+  resetForm()
 
   if (show) {
     editingId = show.id
     editingOriginalShow = { ...show }
     fillForm(show)
 
-    document.getElementById('modalTitle').textContent = canManageAgenda()
-      ? 'Editar show'
-      : 'Detalhes do show'
+    const els = getModalEls()
+    els.title.textContent = canManageAgenda() ? 'Editar show' : 'Detalhes do show'
 
-    setReadOnlyMode(!canManageAgenda())
+    if (canManageAgenda()) {
+      els.deleteBtn.classList.remove('hidden')
+    } else {
+      setReadOnly(true)
+    }
   } else {
     fillForm(null, date)
-    document.getElementById('modalTitle').textContent = 'Novo show'
-    setReadOnlyMode(false)
   }
 
-  showModal()
+  openModal()
 }
-
-document.addEventListener('click', (event) => {
-  const backdrop = document.getElementById('modalBackdrop')
-  if (backdrop && event.target === backdrop) {
-    closeCreateShowModal()
-  }
-})
 
 async function saveShow() {
   await loadCurrentUserRole()
 
   if (!canManageAgenda()) {
-    closeCreateShowModal()
     alert('Você não tem permissão para alterar a agenda.')
+    closeCreateShowModal()
     return
   }
 
-  const data = document.getElementById('showDate').value
-  const horario = document.getElementById('showTime').value || null
-  const cidade = document.getElementById('showCity').value
-  const estado = document.getElementById('showState').value
-  const titulo = document.getElementById('showTitle').value
-  const contratante = document.getElementById('showContractor').value
-  const observacoes = document.getElementById('showNotes').value
+  const els = getModalEls()
+
+  const data = els.date.value
+  const horario = els.time.value || null
+  const cidade = els.city.value
+  const estado = els.state.value
+  const titulo = els.titleInput.value
+  const contratante = els.contractor.value
+  const observacoes = els.notes.value
 
   if (!data) {
     alert('Preencha a data')
@@ -277,7 +283,6 @@ async function saveShow() {
   if (!user) return
 
   const projectId = getActiveProjectId()
-
   if (!projectId) {
     alert('Nenhuma agenda selecionada')
     return
@@ -331,6 +336,7 @@ async function saveShow() {
 
   if (error) {
     alert('Erro ao salvar')
+    console.error(error)
     return
   }
 
@@ -342,8 +348,8 @@ async function deleteCurrentShow() {
   await loadCurrentUserRole()
 
   if (!canManageAgenda()) {
-    closeCreateShowModal()
     alert('Você não tem permissão para excluir.')
+    closeCreateShowModal()
     return
   }
 
@@ -370,12 +376,14 @@ async function deleteCurrentShow() {
   emitShowsChanged()
 }
 
-document.getElementById('saveShowBtn')?.addEventListener('click', saveShow)
-document.getElementById('deleteShowBtn')?.addEventListener('click', deleteCurrentShow)
-document.getElementById('closeModalBtn')?.addEventListener('click', closeCreateShowModal)
+const els = getModalEls()
+els.closeBtn.addEventListener('click', closeCreateShowModal)
+els.backdrop.addEventListener('click', closeCreateShowModal)
+els.saveBtn.addEventListener('click', saveShow)
+els.deleteBtn.addEventListener('click', deleteCurrentShow)
 
 window.openCreateShowModal = openCreateShowModal
+window.closeCreateShowModal = closeCreateShowModal
 window.saveShow = saveShow
 window.deleteCurrentShow = deleteCurrentShow
-window.closeCreateShowModal = closeCreateShowModal
 window.attemptCloseModal = closeCreateShowModal

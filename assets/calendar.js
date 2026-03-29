@@ -1,6 +1,7 @@
 import { supabase } from './supabase.js'
 
 let currentUserRole = null
+let isLoadingShows = false
 
 function getActiveProjectId() {
   return localStorage.getItem('activeProjectId')
@@ -22,7 +23,10 @@ async function loadCurrentUserRole() {
   if (!user) return null
 
   const activeProjectId = getActiveProjectId()
-  if (!activeProjectId) return null
+  if (!activeProjectId) {
+    currentUserRole = null
+    return null
+  }
 
   const { data } = await supabase
     .from('project_members')
@@ -85,7 +89,7 @@ function getStatusMeta(status) {
 
 function renderEmptyState(container) {
   container.innerHTML = `
-    <div class="text-sm text-gray-400 text-center mt-4">
+    <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-3 py-4 text-center text-sm text-gray-400">
       Sem eventos
     </div>
   `
@@ -98,112 +102,159 @@ function renderShowCard(show) {
   const horario = escapeHtml(show.horario || '--:--')
   const cidade = escapeHtml(show.cidade || '')
   const estado = escapeHtml(show.estado || '')
+  const contratante = escapeHtml(show.contratante || '')
 
   const local = cidade
     ? `${cidade}${estado ? `/${estado}` : ''}`
     : 'Local não definido'
 
-  const el = document.createElement('div')
-
+  const el = document.createElement('button')
+  el.type = 'button'
+  el.dataset.showId = show.id
   el.className = `
-    rounded-2xl border p-3 mt-2 cursor-pointer
-    transition hover:scale-[1.02] hover:shadow-sm
+    w-full text-left rounded-2xl border p-3 mt-2
+    transition hover:scale-[1.01] hover:shadow-sm
     ${meta.card}
   `
 
   el.innerHTML = `
-    <div class="flex justify-between items-start mb-2">
+    <div class="flex justify-between items-start gap-2 mb-2">
       <div class="min-w-0">
         <p class="font-semibold text-gray-900 truncate">${titulo}</p>
-        <p class="text-xs text-gray-600">${horario}</p>
+        <p class="text-xs text-gray-600 mt-1">${horario}</p>
       </div>
 
-      <span class="flex items-center gap-1 px-2 py-1 text-[11px] rounded-xl border ${meta.badge}">
+      <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold border ${meta.badge}">
         <span class="w-2 h-2 rounded-full ${meta.dot}"></span>
         ${meta.label}
       </span>
     </div>
 
     <p class="text-sm text-gray-700 truncate">${local}</p>
+
+    <p class="text-xs text-gray-500 mt-1 truncate">
+      ${contratante ? `Contratante: ${contratante}` : 'Sem contratante'}
+    </p>
   `
 
-  el.onclick = () => {
+  el.addEventListener('click', () => {
     if (window.openCreateShowModal) {
       window.openCreateShowModal(null, show)
     }
-  }
+  })
 
   return el
 }
 
 function getContainer(date) {
-  const clean = normalizeDate(date)
-  const day = document.querySelector(`[data-date="${clean}"]`)
-  return day?.querySelector('.events-container') || null
+  const cleanDate = normalizeDate(date)
+  const day = document.querySelector(`[data-date="${cleanDate}"]`)
+  if (!day) return null
+  return day.querySelector('.events-container')
+}
+
+function clearAllDays() {
+  document.querySelectorAll('.events-container').forEach(container => {
+    renderEmptyState(container)
+  })
 }
 
 async function loadShows() {
-  const user = await getUser()
-  if (!user) return
+  if (isLoadingShows) return
+  isLoadingShows = true
 
-  await loadCurrentUserRole()
+  try {
+    const user = await getUser()
+    if (!user) return
 
-  const activeProjectId = getActiveProjectId()
+    await loadCurrentUserRole()
 
-  if (!activeProjectId) {
-    document.querySelectorAll('.events-container').forEach(renderEmptyState)
-    return
-  }
+    const activeProjectId = getActiveProjectId()
 
-  const { data: shows, error } = await supabase
-    .from('shows')
-    .select('*')
-    .eq('project_id', activeProjectId)
+    if (!activeProjectId) {
+      clearAllDays()
+      return
+    }
 
-  if (error) {
-    console.error(error)
-    return
-  }
+    const { data: shows, error } = await supabase
+      .from('shows')
+      .select('*')
+      .eq('project_id', activeProjectId)
 
-  // limpa tudo
-  document.querySelectorAll('.events-container').forEach(container => {
-    container.innerHTML = ''
-    renderEmptyState(container)
-  })
+    if (error) {
+      console.error('Erro ao buscar shows:', error)
+      clearAllDays()
+      return
+    }
 
-  const grouped = {}
-
-  sortShows(shows || []).forEach(show => {
-    const date = normalizeDate(show.data)
-    if (!grouped[date]) grouped[date] = []
-    grouped[date].push(show)
-  })
-
-  Object.keys(grouped).forEach(date => {
-    const container = getContainer(date)
-    if (!container) return
-
-    container.innerHTML = ''
-
-    grouped[date].forEach(show => {
-      container.appendChild(renderShowCard(show))
+    document.querySelectorAll('.events-container').forEach(container => {
+      container.innerHTML = ''
+      renderEmptyState(container)
     })
+
+    const grouped = {}
+
+    sortShows(shows || []).forEach(show => {
+      const date = normalizeDate(show.data)
+      if (!grouped[date]) grouped[date] = []
+      grouped[date].push(show)
+    })
+
+    Object.keys(grouped).forEach(date => {
+      const container = getContainer(date)
+      if (!container) return
+
+      container.innerHTML = ''
+
+      grouped[date].forEach(show => {
+        container.appendChild(renderShowCard(show))
+      })
+    })
+  } finally {
+    isLoadingShows = false
+  }
+}
+
+function calendarAlreadyRendered() {
+  return document.querySelectorAll('[data-date]').length > 0
+}
+
+function bootCalendarShows() {
+  if (calendarAlreadyRendered()) {
+    loadShows()
+    return
+  }
+
+  requestAnimationFrame(() => {
+    if (calendarAlreadyRendered()) {
+      loadShows()
+    }
   })
 }
 
-/* ===== EVENTO PRINCIPAL (CORREÇÃO DO BUG) ===== */
 document.addEventListener('calendar:rendered', () => {
   loadShows()
 })
 
-/* ===== LISTENERS ===== */
-window.addEventListener('showsChanged', loadShows)
+window.addEventListener('showsChanged', () => {
+  loadShows()
+})
 
-/* ===== EXPORTS ===== */
+window.addEventListener('storage', e => {
+  if (e.key === 'activeProjectId') {
+    loadShows()
+  }
+})
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootCalendarShows)
+} else {
+  bootCalendarShows()
+}
+
 window.loadShows = loadShows
 window.canManageAgenda = canManageAgenda
 window.loadCurrentUserRole = loadCurrentUserRole
-
 window.addShowToCalendar = loadShows
 window.removeShowFromCalendar = loadShows
 window.updateShowInCalendar = loadShows

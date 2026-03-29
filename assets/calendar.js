@@ -13,7 +13,7 @@ async function getUser() {
 }
 
 function formatShowTime(horario) {
-  return horario && horario.trim() ? horario : 'Nao definido'
+  return horario && horario.trim() ? horario : ''
 }
 
 function renderShowCard(show) {
@@ -27,8 +27,8 @@ function renderShowCard(show) {
   el.innerHTML = `
     <div>
       <p class="font-semibold text-gray-900">
-        ${formatShowTime(show.horario)} - ${show.cidade || ''}/${show.estado || ''}
-      </p>
+  ${show.horario ? `${show.horario} • ` : ''}${show.cidade || ''}${show.estado ? `/${show.estado}` : ''}
+</p>
       <p class="text-xs text-gray-500 mt-1">
         ${show.titulo || ''}
       </p>

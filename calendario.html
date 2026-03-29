@@ -27,46 +27,14 @@
   </button>
 </div>
 
-<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+<!-- HEADER MÊS -->
+<div class="flex justify-between items-center mb-6">
+  <button onclick="prevMonth()" class="px-4 py-2 bg-white border rounded-xl">←</button>
+  <h2 id="month-title" class="text-xl font-bold"></h2>
+  <button onclick="nextMonth()" class="px-4 py-2 bg-white border rounded-xl">→</button>
+</div>
 
-<script>
-const diasSemana = [
-  "quarta-feira","quinta-feira","sexta-feira","sábado","domingo",
-  "segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira",
-  "sábado","domingo","segunda-feira","terça-feira","quarta-feira",
-  "quinta-feira","sexta-feira","sábado","domingo","segunda-feira",
-  "terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado",
-  "domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira"
-]
-
-for(let i=1;i<=30;i++){
-  const dia = String(i).padStart(2,'0')
-
-  document.write(`
-    <div class="bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col" data-date="2026-04-${dia}">
-
-      <div class="flex items-start justify-between mb-3">
-        <div>
-          <span class="text-xl font-bold">${dia}/04</span>
-          <p class="text-sm text-gray-500">${diasSemana[i-1]}</p>
-        </div>
-
-        <button onclick="openCreateShowModal('2026-04-${dia}')" 
-          class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100">
-          +
-        </button>
-      </div>
-
-      <div class="events-container mt-auto text-sm text-gray-400">
-        Sem eventos
-      </div>
-
-    </div>
-  `)
-}
-</script>
-
-</section>
+<section id="calendar" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4"></section>
 
 </main>
 
@@ -75,6 +43,81 @@ for(let i=1;i<=30;i++){
 <script src="assets/menu.js"></script>
 <script type="module" src="assets/create-show-modal.js"></script>
 <script type="module" src="assets/calendar.js"></script>
+
+<script>
+let currentMonth = 4
+let currentYear = 2026
+
+function renderCalendar() {
+  const calendar = document.getElementById('calendar')
+  calendar.innerHTML = ''
+
+  const totalDays = new Date(currentYear, currentMonth, 0).getDate()
+
+  for (let i = 1; i <= totalDays; i++) {
+    const dia = String(i).padStart(2, '0')
+    const date = `${currentYear}-${String(currentMonth).padStart(2,'0')}-${dia}`
+
+    const el = document.createElement('div')
+
+    el.className = "bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col"
+    el.setAttribute('data-date', date)
+
+    el.innerHTML = `
+      <div class="flex justify-between mb-3">
+        <div>
+          <span class="text-xl font-bold">${dia}/${currentMonth}</span>
+          <p class="text-sm text-gray-500">
+            ${new Date(date).toLocaleDateString('pt-BR', { weekday: 'long' })}
+          </p>
+        </div>
+
+        <button onclick="openCreateShowModal('${date}')" 
+          class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100">
+          +
+        </button>
+      </div>
+
+      <div class="events-container mt-auto text-sm text-gray-400">
+        Sem eventos
+      </div>
+    `
+
+    calendar.appendChild(el)
+  }
+
+  document.getElementById('month-title').innerText =
+    new Date(currentYear, currentMonth - 1).toLocaleDateString('pt-BR', {
+      month: 'long',
+      year: 'numeric'
+    })
+
+  // 🔥 recarrega eventos do banco
+  if (window.loadShows) {
+    window.loadShows()
+  }
+}
+
+function nextMonth() {
+  currentMonth++
+  if (currentMonth > 12) {
+    currentMonth = 1
+    currentYear++
+  }
+  renderCalendar()
+}
+
+function prevMonth() {
+  currentMonth--
+  if (currentMonth < 1) {
+    currentMonth = 12
+    currentYear--
+  }
+  renderCalendar()
+}
+
+renderCalendar()
+</script>
 
 </body>
 </html>

@@ -22,15 +22,15 @@
         </div>
       </div>
 
-      <button onclick="openCreateShowModal()" class="bg-green-600 text-white px-5 py-3 rounded-2xl">
+      <button onclick="openCreateShowModal()" class="bg-green-600 text-white px-5 py-3 rounded-2xl hover:bg-green-700 transition">
         + Criar Show
       </button>
     </div>
 
     <div class="flex justify-between items-center mb-6">
-      <button onclick="prevMonth()" class="px-4 py-2 bg-white border rounded-xl">←</button>
-      <h2 id="month-title" class="text-xl font-bold"></h2>
-      <button onclick="nextMonth()" class="px-4 py-2 bg-white border rounded-xl">→</button>
+      <button onclick="prevMonth()" class="px-4 py-2 bg-white border rounded-xl hover:bg-gray-50 transition">←</button>
+      <h2 id="month-title" class="text-xl font-bold capitalize"></h2>
+      <button onclick="nextMonth()" class="px-4 py-2 bg-white border rounded-xl hover:bg-gray-50 transition">→</button>
     </div>
 
     <section id="calendar" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4"></section>
@@ -40,15 +40,22 @@
   <div id="create-show-modal-container"></div>
 
   <script src="assets/menu.js"></script>
-  <script type="module" src="assets/project-guard.js?v=4"></script>
-  <script type="module" src="assets/create-show-modal.js?v=4"></script>
-  <script type="module" src="assets/calendar.js?v=4"></script>
+  <script type="module" src="assets/project-guard.js?v=5"></script>
+  <script type="module" src="assets/create-show-modal.js?v=5"></script>
+  <script type="module" src="assets/calendar.js?v=5"></script>
 
   <script>
-    let currentMonth = 4
-    let currentYear = 2026
+    let currentMonth = new Date().getMonth() + 1
+    let currentYear = new Date().getFullYear()
 
-    function renderCalendar() {
+    window.getCalendarState = function () {
+      return {
+        currentMonth,
+        currentYear
+      }
+    }
+
+    window.renderCalendar = function () {
       const calendar = document.getElementById('calendar')
       calendar.innerHTML = ''
 
@@ -56,30 +63,32 @@
 
       for (let i = 1; i <= totalDays; i++) {
         const dia = String(i).padStart(2, '0')
-        const date = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${dia}`
+        const mes = String(currentMonth).padStart(2, '0')
+        const date = `${currentYear}-${mes}-${dia}`
 
         const el = document.createElement('div')
-
         el.className = "bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col"
         el.setAttribute('data-date', date)
 
         el.innerHTML = `
-          <div class="flex justify-between mb-3">
+          <div class="flex justify-between items-start mb-3">
             <div>
-              <span class="text-xl font-bold">${dia}/${currentMonth}</span>
-              <p class="text-sm text-gray-500">
-                ${new Date(date).toLocaleDateString('pt-BR', { weekday: 'long' })}
+              <span class="text-xl font-bold">${dia}/${mes}</span>
+              <p class="text-sm text-gray-500 capitalize">
+                ${new Date(date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long' })}
               </p>
             </div>
 
-            <button onclick="openCreateShowModal('${date}')"
-              class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100">
+            <button
+              onclick="openCreateShowModal('${date}')"
+              class="w-8 h-8 rounded-full bg-green-50 text-green-700 font-bold hover:bg-green-100 transition"
+            >
               +
             </button>
           </div>
 
-          <div class="events-container mt-auto text-sm text-gray-400">
-            Sem eventos
+          <div class="events-container mt-auto space-y-2">
+            <div class="text-sm text-gray-400">Sem eventos</div>
           </div>
         `
 
@@ -87,35 +96,40 @@
       }
 
       document.getElementById('month-title').innerText =
-        new Date(currentYear, currentMonth - 1).toLocaleDateString('pt-BR', {
+        new Date(currentYear, currentMonth - 1, 1).toLocaleDateString('pt-BR', {
           month: 'long',
           year: 'numeric'
         })
 
-      if (window.loadShows) {
-        window.loadShows()
-      }
+      document.dispatchEvent(new CustomEvent('calendar:rendered', {
+        detail: {
+          currentMonth,
+          currentYear
+        }
+      }))
     }
 
-    function nextMonth() {
+    window.nextMonth = function () {
       currentMonth++
       if (currentMonth > 12) {
         currentMonth = 1
         currentYear++
       }
-      renderCalendar()
+      window.renderCalendar()
     }
 
-    function prevMonth() {
+    window.prevMonth = function () {
       currentMonth--
       if (currentMonth < 1) {
         currentMonth = 12
         currentYear--
       }
-      renderCalendar()
+      window.renderCalendar()
     }
 
-    renderCalendar()
+    document.addEventListener('DOMContentLoaded', () => {
+      window.renderCalendar()
+    })
   </script>
 
 </body>

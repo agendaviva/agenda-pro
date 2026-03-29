@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro - Agenda Lux</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-white via-green-50 to-white flex items-center justify-center p-6">
+
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-green-100 p-8">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Agenda Lux</h1>
+      <p class="text-gray-500 mt-2">Crie sua conta</p>
+    </div>
+
+    <form id="register-form" class="space-y-5">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+        <input
+          type="email"
+          id="email"
+          placeholder="seuemail@exemplo.com"
+          class="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-green-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+        <input
+          type="password"
+          id="password"
+          placeholder="Mínimo 6 caracteres"
+          class="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-green-500"
+          required
+        />
+      </div>
+
+      <button
+        type="submit"
+        class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition"
+      >
+        Criar conta
+      </button>
+    </form>
+
+    <p id="message" class="text-sm text-center mt-4"></p>
+
+    <p class="text-sm text-center text-gray-500 mt-6">
+      Já tem conta?
+      <a href="login.html" class="text-green-600 font-medium hover:underline">Entrar</a>
+    </p>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabaseUrl = 'https://hljyiyxdvdkebbcylggm.supabase.co';
+    const supabaseKey = 'sb_publishable_gMc4tk8Poxf2J9MKF5-_Ng_qCHhk6XD';
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const form = document.getElementById('register-form');
+    const message = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      message.textContent = 'Criando conta...';
+      message.className = 'text-sm text-center mt-4 text-gray-500';
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+
+      if (error) {
+        message.textContent = 'Erro: ' + error.message;
+        message.className = 'text-sm text-center mt-4 text-red-600';
+        return;
+      }
+
+      message.textContent = 'Conta criada com sucesso! Agora faça login.';
+      message.className = 'text-sm text-center mt-4 text-green-600';
+
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 1200);
+    });
+  </script>
+</body>
+</html>

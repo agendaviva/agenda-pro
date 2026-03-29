@@ -88,7 +88,7 @@ async function createProject(name, user) {
     throw new Error('Você não tem moedas suficientes para criar uma nova agenda.')
   }
 
-  const expiresAt = add30DaysIso()
+  const planExpiresAt = add30DaysIso()
 
   const { data: project, error: projectError } = await supabase
     .from('projects')
@@ -96,8 +96,7 @@ async function createProject(name, user) {
       {
         name,
         owner_user_id: user.id,
-        expires_at: expiresAt,
-        is_active: true
+        plan_expires_at: planExpiresAt
       }
     ])
     .select()

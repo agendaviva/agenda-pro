@@ -12,6 +12,26 @@ async function getUser() {
   return data.user
 }
 
+// 🔥 NOVO: função de boas-vindas
+async function setWelcomeUser() {
+  const { data, error } = await supabase.auth.getUser()
+
+  if (error || !data.user) return
+
+  let nome = data.user.user_metadata?.nome
+
+  if (!nome || nome.trim() === '') {
+    nome = data.user.email || 'Usuário'
+  }
+
+  const firstName = nome.trim().split(' ')[0]
+
+  const el = document.getElementById('welcomeUser')
+  if (el) {
+    el.textContent = `👋 Seja bem vindo, ${firstName}.`
+  }
+}
+
 function formatDateBR(dateString) {
   const [year, month, day] = String(dateString).split('T')[0].split('-')
   return `${day}/${month}/${year}`
@@ -133,6 +153,9 @@ function updateSummary(shows) {
 async function loadDashboard() {
   const user = await getUser()
   if (!user) return
+
+  // 🔥 CHAMA AQUI
+  await setWelcomeUser()
 
   const { data: shows, error } = await supabase
     .from('shows')

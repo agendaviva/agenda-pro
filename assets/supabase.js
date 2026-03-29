@@ -7,3 +7,6 @@ const supabaseKey = 'sb_publishable_gMc4tk8Poxf2J9MKF5-_Ng_qCHhk6XD'
 
 // Cria conexão
 export const supabase = createClient(supabaseUrl, supabaseKey)
+
+// 🔥 ADICIONA ISSO AQUI
+window.supabase = supabase

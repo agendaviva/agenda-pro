@@ -3,71 +3,359 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agenda Pro</title>
+  <title>Agenda Lux — Gestão de Shows com Equipe, Agenda e Controle</title>
+  <meta name="description" content="Organize shows, equipe, convites, agenda e controle do seu projeto musical com a Agenda Lux. Um SaaS moderno para gestão profissional de artistas e agendas.">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-black text-white">
+<body class="bg-white text-gray-900 overflow-x-hidden">
 
-  <!-- NAVBAR -->
-  <nav class="flex justify-between items-center p-6 max-w-6xl mx-auto">
-    <h1 class="text-2xl font-bold">Agenda Pro</h1>
-    <div class="space-x-4">
-      <button onclick="showLogin()" class="text-gray-300">Login</button>
-      <button onclick="showRegister()" class="bg-green-500 px-4 py-2 rounded-xl">Criar Conta</button>
+  <!-- HEADER -->
+  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-green-100">
+    <div class="max-w-7xl mx-auto px-6 md:px-10 h-20 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-green-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+          A
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-green-700 leading-none">Agenda Lux</h1>
+          <p class="text-xs text-gray-500 leading-none mt-1">Gestão profissional de shows</p>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-8">
+        <a href="#funcionalidades" class="text-gray-600 hover:text-green-700 font-medium transition">Funcionalidades</a>
+        <a href="#beneficios" class="text-gray-600 hover:text-green-700 font-medium transition">Benefícios</a>
+        <a href="#contato" class="text-gray-600 hover:text-green-700 font-medium transition">Contato</a>
+      </nav>
+
+      <div class="hidden md:flex items-center gap-3">
+        <a href="login.html" class="px-4 py-2.5 rounded-2xl text-green-700 font-semibold hover:bg-green-50 transition">
+          Login
+        </a>
+        <a href="cadastro.html" class="px-5 py-2.5 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-semibold shadow-sm transition">
+          Cadastro
+        </a>
+      </div>
+
+      <button id="mobileMenuBtn" class="md:hidden w-11 h-11 rounded-2xl border border-green-100 text-green-700 text-2xl">
+        ☰
+      </button>
     </div>
-  </nav>
 
-  <!-- HOME -->
-  <section id="home" class="min-h-screen flex flex-col items-center justify-center text-center px-4">
-    <h1 class="text-4xl md:text-6xl font-bold mb-6">
-      Sua Agenda de Shows no WhatsApp 🚀
-    </h1>
-    <p class="text-lg md:text-xl text-gray-300 max-w-2xl mb-8">
-      Automatize confirmações e lembretes de shows com integração total ao WhatsApp.
-    </p>
-    <button onclick="showRegister()" class="bg-green-500 hover:bg-green-600 px-8 py-4 rounded-2xl text-lg font-semibold">
-      Começar Agora
-    </button>
+    <!-- MOBILE MENU -->
+    <div id="mobileMenu" class="hidden md:hidden border-t border-green-100 bg-white">
+      <div class="px-6 py-5 flex flex-col gap-3">
+        <a href="#funcionalidades" class="px-4 py-3 rounded-2xl text-gray-700 hover:bg-green-50 font-medium">Funcionalidades</a>
+        <a href="#beneficios" class="px-4 py-3 rounded-2xl text-gray-700 hover:bg-green-50 font-medium">Benefícios</a>
+        <a href="#contato" class="px-4 py-3 rounded-2xl text-gray-700 hover:bg-green-50 font-medium">Contato</a>
+        <a href="login.html" class="px-4 py-3 rounded-2xl text-green-700 bg-green-50 font-semibold">Login</a>
+        <a href="cadastro.html" class="px-4 py-3 rounded-2xl bg-green-600 text-white font-semibold text-center">Cadastro</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="relative overflow-hidden bg-gradient-to-br from-white via-green-50 to-white">
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute top-[-80px] right-[-80px] w-80 h-80 bg-green-100 rounded-full blur-3xl opacity-60"></div>
+      <div class="absolute bottom-[-100px] left-[-80px] w-96 h-96 bg-emerald-100 rounded-full blur-3xl opacity-50"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-6 md:px-10 py-20 md:py-28">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <p class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 text-green-700 font-semibold text-sm border border-green-100 mb-6">
+            Gestão moderna para artistas, equipes e agendas
+          </p>
+
+          <h2 class="text-4xl md:text-6xl font-bold leading-tight text-gray-900">
+            Organize sua
+            <span class="text-green-700">agenda de shows</span>
+            com cara de empresa de verdade
+          </h2>
+
+          <p class="mt-6 text-lg md:text-xl text-gray-600 leading-relaxed max-w-2xl">
+            A Agenda Lux foi criada para quem precisa controlar agenda, equipe, convites, permissões e shows em um só lugar, de forma simples, rápida e profissional.
+          </p>
+
+          <div class="mt-8 flex flex-col sm:flex-row gap-4">
+            <a href="cadastro.html" class="px-7 py-4 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-semibold text-center shadow-sm transition">
+              Começar agora
+            </a>
+            <a href="login.html" class="px-7 py-4 rounded-2xl border border-green-200 hover:bg-green-50 text-green-700 font-semibold text-center transition">
+              Já tenho conta
+            </a>
+          </div>
+
+          <div class="mt-8 flex flex-wrap gap-3">
+            <div class="px-4 py-2 rounded-2xl bg-white border border-green-100 text-sm text-gray-600">Agenda por projeto</div>
+            <div class="px-4 py-2 rounded-2xl bg-white border border-green-100 text-sm text-gray-600">Equipe com permissões</div>
+            <div class="px-4 py-2 rounded-2xl bg-white border border-green-100 text-sm text-gray-600">Controle de plano</div>
+          </div>
+        </div>
+
+        <div class="relative">
+          <div class="bg-white border border-green-100 rounded-[32px] shadow-xl p-6 md:p-8">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <p class="text-sm text-gray-500">Agenda atual</p>
+                <h3 class="text-2xl font-bold text-gray-900">Projeto Principal</h3>
+              </div>
+              <div class="px-4 py-2 rounded-2xl bg-green-50 border border-green-200 text-green-700 text-sm font-semibold">
+                27 dias restantes
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div class="rounded-3xl border border-green-100 bg-green-50/60 p-5">
+                <p class="text-sm text-gray-500 mb-2">Shows este mês</p>
+                <p class="text-3xl font-bold">12</p>
+              </div>
+              <div class="rounded-3xl border border-green-100 bg-white p-5">
+                <p class="text-sm text-gray-500 mb-2">Próximos shows</p>
+                <p class="text-3xl font-bold">5</p>
+              </div>
+              <div class="rounded-3xl border border-green-100 bg-white p-5">
+                <p class="text-sm text-gray-500 mb-2">Cidades</p>
+                <p class="text-3xl font-bold">8</p>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div class="rounded-2xl border border-green-100 p-4 hover:bg-green-50 transition">
+                <p class="font-semibold text-gray-900">15/04/2026 • 22:00</p>
+                <p class="text-gray-600">Salvador/BA</p>
+                <p class="text-sm text-gray-500">Arrocha Sunset</p>
+              </div>
+
+              <div class="rounded-2xl border border-green-100 p-4 hover:bg-green-50 transition">
+                <p class="font-semibold text-gray-900">18/04/2026 • 20:30</p>
+                <p class="text-gray-600">Feira de Santana/BA</p>
+                <p class="text-sm text-gray-500">Noite Prime</p>
+              </div>
+
+              <div class="rounded-2xl border border-green-100 p-4 hover:bg-green-50 transition">
+                <p class="font-semibold text-gray-900">22/04/2026 • 21:00</p>
+                <p class="text-gray-600">Itabuna/BA</p>
+                <p class="text-sm text-gray-500">Festival Lux</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <!-- LOGIN -->
-  <section id="login" class="hidden min-h-screen flex items-center justify-center">
-    <div class="bg-gray-900 p-8 rounded-2xl w-full max-w-md">
-      <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
-      <input type="email" placeholder="Email" class="w-full mb-4 p-3 rounded bg-black border border-gray-700">
-      <input type="password" placeholder="Senha" class="w-full mb-6 p-3 rounded bg-black border border-gray-700">
-      <button class="w-full bg-green-500 py-3 rounded-xl">Entrar</button>
-      <p class="text-center mt-4 text-gray-400">
-        Não tem conta? <span onclick="showRegister()" class="text-green-400 cursor-pointer">Criar</span>
-      </p>
+  <!-- FUNCIONALIDADES -->
+  <section id="funcionalidades" class="py-20 md:py-24">
+    <div class="max-w-7xl mx-auto px-6 md:px-10">
+      <div class="max-w-3xl mb-14">
+        <p class="text-sm uppercase tracking-[0.18em] text-green-600 font-semibold mb-3">Funcionalidades</p>
+        <h3 class="text-3xl md:text-5xl font-bold text-gray-900 leading-tight">
+          Tudo que você precisa para controlar sua agenda sem bagunça
+        </h3>
+        <p class="text-gray-600 mt-4 text-lg">
+          Menos improviso, mais organização. Tenha uma operação profissional para seu projeto musical.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div class="bg-white border border-green-100 rounded-3xl p-6 shadow-sm">
+          <div class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-2xl mb-5">📅</div>
+          <h4 class="text-xl font-bold mb-3">Calendário de shows</h4>
+          <p class="text-gray-600 leading-relaxed">
+            Visualize todos os eventos por data, abra modal rápido e mantenha sua agenda sempre organizada.
+          </p>
+        </div>
+
+        <div class="bg-white border border-green-100 rounded-3xl p-6 shadow-sm">
+          <div class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-2xl mb-5">👥</div>
+          <h4 class="text-xl font-bold mb-3">Equipe com permissões</h4>
+          <p class="text-gray-600 leading-relaxed">
+            Admin, editor e viewer com acesso controlado, para cada pessoa mexer só no que pode.
+          </p>
+        </div>
+
+        <div class="bg-white border border-green-100 rounded-3xl p-6 shadow-sm">
+          <div class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-2xl mb-5">✉️</div>
+          <h4 class="text-xl font-bold mb-3">Convites inteligentes</h4>
+          <p class="text-gray-600 leading-relaxed">
+            Envie convites para a equipe com expiração, controle de acesso e gestão centralizada.
+          </p>
+        </div>
+
+        <div class="bg-white border border-green-100 rounded-3xl p-6 shadow-sm">
+          <div class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-2xl mb-5">🪙</div>
+          <h4 class="text-xl font-bold mb-3">Plano por moedas</h4>
+          <p class="text-gray-600 leading-relaxed">
+            Crie novas agendas usando moedas e acompanhe quantos dias faltam para expiração do plano.
+          </p>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- REGISTER -->
-  <section id="register" class="hidden min-h-screen flex items-center justify-center">
-    <div class="bg-gray-900 p-8 rounded-2xl w-full max-w-md">
-      <h2 class="text-2xl font-bold mb-6 text-center">Criar Conta</h2>
-      <input type="text" placeholder="Nome" class="w-full mb-4 p-3 rounded bg-black border border-gray-700">
-      <input type="email" placeholder="Email" class="w-full mb-4 p-3 rounded bg-black border border-gray-700">
-      <input type="password" placeholder="Senha" class="w-full mb-6 p-3 rounded bg-black border border-gray-700">
-      <button class="w-full bg-green-500 py-3 rounded-xl">Cadastrar</button>
-      <p class="text-center mt-4 text-gray-400">
-        Já tem conta? <span onclick="showLogin()" class="text-green-400 cursor-pointer">Entrar</span>
-      </p>
+  <!-- BENEFÍCIOS -->
+  <section id="beneficios" class="py-20 md:py-24 bg-gradient-to-br from-green-50 to-white">
+    <div class="max-w-7xl mx-auto px-6 md:px-10">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+        <div>
+          <p class="text-sm uppercase tracking-[0.18em] text-green-600 font-semibold mb-3">Benefícios</p>
+          <h3 class="text-3xl md:text-5xl font-bold text-gray-900 leading-tight">
+            Um sistema pensado para quem vive a rotina real dos shows
+          </h3>
+          <p class="text-gray-600 mt-4 text-lg">
+            A Agenda Lux ajuda empresários, artistas e equipes a trabalharem com mais clareza, segurança e velocidade.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="bg-white border border-green-100 rounded-3xl p-5 shadow-sm">
+            <h4 class="font-bold text-lg mb-2">Mais controle da operação</h4>
+            <p class="text-gray-600">Tenha uma visão clara dos próximos eventos, agenda ativa e andamento do projeto.</p>
+          </div>
+
+          <div class="bg-white border border-green-100 rounded-3xl p-5 shadow-sm">
+            <h4 class="font-bold text-lg mb-2">Mais segurança com permissões</h4>
+            <p class="text-gray-600">Proteja sua equipe e sua agenda com acessos organizados no front e no banco.</p>
+          </div>
+
+          <div class="bg-white border border-green-100 rounded-3xl p-5 shadow-sm">
+            <h4 class="font-bold text-lg mb-2">Mais profissionalismo</h4>
+            <p class="text-gray-600">Pare de depender de anotações soltas, mensagens perdidas ou planilhas confusas.</p>
+          </div>
+
+          <div class="bg-white border border-green-100 rounded-3xl p-5 shadow-sm">
+            <h4 class="font-bold text-lg mb-2">Mais escala</h4>
+            <p class="text-gray-600">Crie múltiplas agendas e organize diferentes projetos com o mesmo padrão de gestão.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
+
+  <!-- CTA -->
+  <section class="py-20 md:py-24">
+    <div class="max-w-5xl mx-auto px-6 md:px-10">
+      <div class="bg-green-600 text-white rounded-[36px] p-8 md:p-14 shadow-xl">
+        <div class="max-w-3xl">
+          <p class="text-sm uppercase tracking-[0.18em] text-white/80 font-semibold mb-3">Comece agora</p>
+          <h3 class="text-3xl md:text-5xl font-bold leading-tight">
+            Transforme sua agenda em uma operação organizada e profissional
+          </h3>
+          <p class="text-white/90 mt-5 text-lg">
+            Crie sua conta, monte sua equipe e gerencie seus shows com uma plataforma feita para a rotina real do mercado.
+          </p>
+
+          <div class="mt-8 flex flex-col sm:flex-row gap-4">
+            <a href="cadastro.html" class="px-7 py-4 rounded-2xl bg-white text-green-700 font-semibold text-center hover:bg-green-50 transition">
+              Criar conta
+            </a>
+            <a href="login.html" class="px-7 py-4 rounded-2xl border border-white/30 text-white font-semibold text-center hover:bg-white/10 transition">
+              Fazer login
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTATO -->
+  <section id="contato" class="pb-20 md:pb-24">
+    <div class="max-w-7xl mx-auto px-6 md:px-10">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-white border border-green-100 rounded-3xl p-8 shadow-sm">
+          <p class="text-sm uppercase tracking-[0.18em] text-green-600 font-semibold mb-3">Contato</p>
+          <h3 class="text-3xl font-bold text-gray-900 mb-4">Fale com a equipe da Agenda Lux</h3>
+          <p class="text-gray-600 text-lg leading-relaxed">
+            Quer tirar dúvidas, conhecer melhor a plataforma ou falar com o suporte? Entre em contato.
+          </p>
+
+          <div class="mt-8 space-y-4">
+            <div class="rounded-2xl border border-green-100 p-4">
+              <p class="text-sm text-gray-500">E-mail</p>
+              <p class="font-semibold text-gray-900">contato@agendalux.com</p>
+            </div>
+
+            <div class="rounded-2xl border border-green-100 p-4">
+              <p class="text-sm text-gray-500">WhatsApp</p>
+              <p class="font-semibold text-gray-900">(00) 00000-0000</p>
+            </div>
+
+            <div class="rounded-2xl border border-green-100 p-4">
+              <p class="text-sm text-gray-500">Atendimento</p>
+              <p class="font-semibold text-gray-900">Segunda a sexta, das 9h às 18h</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-green-100 rounded-3xl p-8 shadow-sm">
+          <h4 class="text-2xl font-bold text-gray-900 mb-6">Envie sua mensagem</h4>
+
+          <form class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+              <input
+                type="text"
+                placeholder="Seu nome"
+                class="w-full rounded-2xl border border-green-100 px-4 py-3 outline-none focus:border-green-400"
+              >
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+              <input
+                type="email"
+                placeholder="voce@exemplo.com"
+                class="w-full rounded-2xl border border-green-100 px-4 py-3 outline-none focus:border-green-400"
+              >
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Mensagem</label>
+              <textarea
+                rows="5"
+                placeholder="Escreva sua mensagem"
+                class="w-full rounded-2xl border border-green-100 px-4 py-3 outline-none focus:border-green-400 resize-none"
+              ></textarea>
+            </div>
+
+            <button
+              type="button"
+              class="w-full rounded-2xl bg-green-600 hover:bg-green-700 text-white font-semibold py-4 transition"
+            >
+              Enviar mensagem
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-green-100 bg-white">
+    <div class="max-w-7xl mx-auto px-6 md:px-10 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div>
+        <p class="font-bold text-green-700">Agenda Lux</p>
+        <p class="text-sm text-gray-500">Gestão profissional de shows, equipe e agenda.</p>
+      </div>
+
+      <div class="flex items-center gap-5 text-sm text-gray-500">
+        <a href="login.html" class="hover:text-green-700 transition">Login</a>
+        <a href="cadastro.html" class="hover:text-green-700 transition">Cadastro</a>
+        <a href="#contato" class="hover:text-green-700 transition">Contato</a>
+      </div>
+    </div>
+  </footer>
 
   <script>
-    function showLogin() {
-      document.getElementById('home').classList.add('hidden');
-      document.getElementById('register').classList.add('hidden');
-      document.getElementById('login').classList.remove('hidden');
-    }
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn')
+    const mobileMenu = document.getElementById('mobileMenu')
 
-    function showRegister() {
-      document.getElementById('home').classList.add('hidden');
-      document.getElementById('login').classList.add('hidden');
-      document.getElementById('register').classList.remove('hidden');
+    if (mobileMenuBtn && mobileMenu) {
+      mobileMenuBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden')
+      })
     }
   </script>
 

@@ -1,7 +1,7 @@
 import { supabase } from './supabase.js'
 
-// 🔥 controle de edição
 let editingId = null
+let editingOriginalShow = null
 
 document.getElementById("create-show-modal-container").innerHTML = `
   <div id="createShowModal" class="fixed inset-0 hidden z-[70]">
@@ -71,31 +71,28 @@ document.getElementById("create-show-modal-container").innerHTML = `
   </div>
 `
 
-// 🔥 ABRIR MODAL (CREATE ou EDIT)
 function openCreateShowModal(date = '', show = null) {
   const modal = document.getElementById('createShowModal')
-
   modal.classList.remove('hidden')
   document.body.classList.add('overflow-hidden')
 
   const title = document.getElementById('modalTitle')
 
   if (show) {
-    // 👉 modo edição
     editingId = show.id
+    editingOriginalShow = { ...show }
     title.innerText = 'Editar show'
 
-    document.getElementById('showDate').value = show.data
-    document.getElementById('showTime').value = show.horario
-    document.getElementById('showCity').value = show.cidade
-    document.getElementById('showState').value = show.estado
-    document.getElementById('showTitle').value = show.titulo
-    document.getElementById('showContractor').value = show.contratante
-    document.getElementById('showNotes').value = show.observacoes
-
+    document.getElementById('showDate').value = show.data || ''
+    document.getElementById('showTime').value = show.horario || ''
+    document.getElementById('showCity').value = show.cidade || ''
+    document.getElementById('showState').value = show.estado || ''
+    document.getElementById('showTitle').value = show.titulo || ''
+    document.getElementById('showContractor').value = show.contratante || ''
+    document.getElementById('showNotes').value = show.observacoes || ''
   } else {
-    // 👉 modo criação
     editingId = null
+    editingOriginalShow = null
     title.innerText = 'Novo show'
 
     document.getElementById('showDate').value = date || ''
@@ -108,18 +105,15 @@ function openCreateShowModal(date = '', show = null) {
   }
 }
 
-// 🔥 FECHAR
 function closeCreateShowModal() {
   document.getElementById('createShowModal').classList.add('hidden')
   document.body.classList.remove('overflow-hidden')
 }
 
-// 🔥 CONFIRMAR FECHAMENTO
 function attemptCloseModal() {
   if (confirm('Cancelar?')) closeCreateShowModal()
 }
 
-// 🔥 BACKDROP
 document.addEventListener('click', function (event) {
   const backdrop = document.getElementById('modalBackdrop')
   if (backdrop && event.target === backdrop) {
@@ -127,7 +121,6 @@ document.addEventListener('click', function (event) {
   }
 })
 
-// 🔥 SALVAR (CREATE ou UPDATE)
 async function saveShow() {
   const data = document.getElementById('showDate').value
   const horario = document.getElementById('showTime').value
@@ -142,10 +135,20 @@ async function saveShow() {
     return
   }
 
-  let error
+  let error = null
 
   if (editingId) {
-    // 🔥 UPDATE
+    const updatedShow = {
+      id: editingId,
+      data,
+      horario,
+      cidade,
+      estado,
+      titulo,
+      contratante,
+      observacoes
+    }
+
     const res = await supabase
       .from('shows')
       .update({
@@ -158,16 +161,26 @@ async function saveShow() {
         observacoes
       })
       .eq('id', editingId)
+      .select()
+      .single()
 
     error = res.error
 
+    if (!error && window.updateShowInCalendar && editingOriginalShow) {
+      window.updateShowInCalendar(editingOriginalShow, res.data || updatedShow)
+    }
   } else {
-    // 🔥 CREATE
     const res = await supabase
       .from('shows')
       .insert([{ data, horario, cidade, estado, titulo, contratante, observacoes }])
+      .select()
+      .single()
 
     error = res.error
+
+    if (!error && window.addShowToCalendar) {
+      window.addShowToCalendar(res.data)
+    }
   }
 
   if (error) {
@@ -176,10 +189,8 @@ async function saveShow() {
   }
 
   closeCreateShowModal()
-  location.reload()
 }
 
-// 🔥 GLOBAL
 window.openCreateShowModal = openCreateShowModal
 window.saveShow = saveShow
 window.attemptCloseModal = attemptCloseModal

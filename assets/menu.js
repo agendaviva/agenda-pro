@@ -36,7 +36,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       const fallbackName = user.user_metadata?.nome || ''
       const fallbackEmail = user.email || ''
 
-      // garante perfil básico se não existir
       await supabase
         .from('profiles')
         .upsert(
@@ -50,14 +49,15 @@ window.addEventListener('DOMContentLoaded', async () => {
 
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('nome, email, coins')
+        .select('nome, email, coins, is_admin')
         .eq('id', user.id)
         .maybeSingle()
 
       profile = profileData || {
         nome: fallbackName,
         email: fallbackEmail,
-        coins: 0
+        coins: 0,
+        is_admin: false
       }
 
       const { data: memberRows } = await supabase
@@ -103,6 +103,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   const initial = String(displayName).trim().charAt(0).toUpperCase() || 'U'
   const coins = Number(profile?.coins || 0)
+  const isAdmin = Boolean(profile?.is_admin)
 
   container.innerHTML = `
     <div id="overlay" class="fixed inset-0 bg-black/40 hidden z-40 md:hidden"></div>
@@ -180,6 +181,20 @@ window.addEventListener('DOMContentLoaded', async () => {
           >
             Suporte
           </button>
+
+          ${
+            isAdmin
+              ? `
+                <button
+                  id="adminPanelBtn"
+                  type="button"
+                  class="${activeClass('painel-admin.html')} block w-full text-left px-4 py-3 rounded-2xl font-semibold"
+                >
+                  Painel ADM
+                </button>
+              `
+              : ''
+          }
         </nav>
       </div>
 
@@ -239,6 +254,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('supportBtn')?.addEventListener('click', () => {
     window.location.href = 'suporte.html'
+  })
+
+  document.getElementById('adminPanelBtn')?.addEventListener('click', () => {
+    window.location.href = 'painel-admin.html'
   })
 
   document.getElementById('logoutBtn')?.addEventListener('click', async () => {

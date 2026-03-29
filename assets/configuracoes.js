@@ -1,42 +1,72 @@
-import { supabase } from './supabase.js'
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações - Agenda Lux</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-white via-green-50 to-white text-gray-900">
 
-// 🔐 carregar dados do usuário
-async function loadUser() {
-  const { data } = await supabase.auth.getUser()
-  if (!data.user) {
-    window.location.href = 'login.html'
-    return
-  }
+  <div id="menu-container"></div>
 
-  const nome = data.user.user_metadata?.nome || ''
-  const email = data.user.email || ''
+  <main class="md:ml-72 min-h-screen p-6 md:p-10">
 
-  document.getElementById('userName').value = nome
-  document.getElementById('userEmail').value = email
-}
+    <h1 class="text-2xl md:text-3xl font-bold mb-8">Configurações</h1>
 
-// 🔒 trocar senha
-document.getElementById('passwordForm').addEventListener('submit', async (e) => {
-  e.preventDefault()
+    <!-- DADOS -->
+    <div class="bg-white border border-green-100 rounded-3xl p-6 shadow-sm mb-8">
+      <h2 class="text-lg font-semibold mb-4">Dados da conta</h2>
 
-  const newPassword = document.getElementById('newPassword').value
-  const message = document.getElementById('message')
+      <div class="space-y-4">
 
-  message.textContent = 'Atualizando...'
-  message.className = 'text-sm mt-4 text-gray-500'
+        <div>
+          <label class="text-sm text-gray-500">Nome</label>
+          <input id="userName" disabled class="w-full mt-1 px-4 py-3 rounded-xl bg-gray-100 text-gray-500 border border-gray-200">
+        </div>
 
-  const { error } = await supabase.auth.updateUser({
-    password: newPassword
-  })
+        <div>
+          <label class="text-sm text-gray-500">Email</label>
+          <input id="userEmail" disabled class="w-full mt-1 px-4 py-3 rounded-xl bg-gray-100 text-gray-500 border border-gray-200">
+        </div>
 
-  if (error) {
-    message.textContent = error.message
-    message.className = 'text-sm mt-4 text-red-600'
-    return
-  }
+      </div>
+    </div>
 
-  message.textContent = 'Senha atualizada com sucesso!'
-  message.className = 'text-sm mt-4 text-green-600'
-})
+    <!-- SENHA -->
+    <div class="bg-white border border-green-100 rounded-3xl p-6 shadow-sm">
+      <h2 class="text-lg font-semibold mb-4">Alterar senha</h2>
 
-loadUser()
+      <form id="passwordForm" class="space-y-4">
+
+        <div>
+          <label class="text-sm text-gray-500">Nova senha</label>
+          <input id="newPassword" type="password" required
+            class="w-full mt-1 px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none">
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-500">Confirmar nova senha</label>
+          <input id="confirmPassword" type="password" required
+            class="w-full mt-1 px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none">
+        </div>
+
+        <button class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-semibold transition">
+          Atualizar senha
+        </button>
+
+      </form>
+
+      <p id="message" class="text-sm mt-4"></p>
+
+    </div>
+
+  </main>
+
+  <!-- ORDEM CORRETA -->
+  <script type="module" src="assets/supabase.js"></script>
+  <script src="assets/menu.js"></script>
+  <script type="module" src="assets/configuracoes.js"></script>
+
+</body>
+</html>

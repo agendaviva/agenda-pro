@@ -2,6 +2,7 @@ import { supabase } from './supabase.js'
 
 let editingId = null
 let editingOriginalShow = null
+let currentUserRole = null
 
 function getActiveProjectId() {
   return localStorage.getItem('activeProjectId')
@@ -17,6 +18,33 @@ async function getUser() {
   }
 
   return data.user
+}
+
+async function loadCurrentUserRole() {
+  const user = await getUser()
+  if (!user) return null
+
+  const projectId = getActiveProjectId()
+  if (!projectId) return null
+
+  const { data, error } = await supabase
+    .from('project_members')
+    .select('role')
+    .eq('project_id', projectId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (error || !data) {
+    currentUserRole = null
+    return null
+  }
+
+  currentUserRole = data.role || null
+  return currentUserRole
+}
+
+function canManageAgenda() {
+  return currentUserRole === 'admin' || currentUserRole === 'editor'
 }
 
 document.getElementById("create-show-modal-container").innerHTML = `
@@ -36,7 +64,7 @@ document.getElementById("create-show-modal-container").innerHTML = `
 
             <div class="flex items-center justify-between mb-5">
               <div>
-                <p class="text-sm text-gray-500">Gerencie os dados do show</p>
+                <p class="text-sm text-gray-500" id="modalSubtitle">Gerencie os dados do show</p>
               </div>
 
               <button
@@ -88,7 +116,7 @@ document.getElementById("create-show-modal-container").innerHTML = `
             </div>
 
             <div class="text-center mt-6">
-              <button onclick="saveShow()" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl">
+              <button id="saveShowBtn" onclick="saveShow()" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl">
                 Salvar
               </button>
             </div>
@@ -105,7 +133,45 @@ function emitShowsChanged() {
   window.dispatchEvent(new CustomEvent('showsChanged'))
 }
 
-function openCreateShowModal(date = '', show = null) {
+function setReadOnlyMode(readOnly) {
+  const fields = [
+    'showDate',
+    'showTime',
+    'showCity',
+    'showState',
+    'showTitle',
+    'showContractor',
+    'showNotes'
+  ]
+
+  fields.forEach(id => {
+    const el = document.getElementById(id)
+    if (!el) return
+    el.disabled = readOnly
+    if (readOnly) {
+      el.classList.add('bg-gray-50', 'text-gray-500', 'cursor-not-allowed')
+    } else {
+      el.classList.remove('bg-gray-50', 'text-gray-500', 'cursor-not-allowed')
+    }
+  })
+
+  const saveBtn = document.getElementById('saveShowBtn')
+  const deleteBtn = document.getElementById('deleteShowBtn')
+  const subtitle = document.getElementById('modalSubtitle')
+
+  if (saveBtn) saveBtn.classList.toggle('hidden', readOnly)
+  if (deleteBtn) deleteBtn.classList.toggle('hidden', readOnly || !editingId)
+
+  if (subtitle) {
+    subtitle.textContent = readOnly
+      ? 'Modo visualização'
+      : 'Gerencie os dados do show'
+  }
+}
+
+async function openCreateShowModal(date = '', show = null) {
+  await loadCurrentUserRole()
+
   const modal = document.getElementById('createShowModal')
   const title = document.getElementById('modalTitle')
   const deleteBtn = document.getElementById('deleteShowBtn')
@@ -116,8 +182,7 @@ function openCreateShowModal(date = '', show = null) {
   if (show) {
     editingId = show.id
     editingOriginalShow = { ...show }
-    title.innerText = 'Editar show'
-    deleteBtn.classList.remove('hidden')
+    title.innerText = canManageAgenda() ? 'Editar show' : 'Detalhes do show'
 
     document.getElementById('showDate').value = show.data || ''
     document.getElementById('showTime').value = show.horario || ''
@@ -126,7 +191,15 @@ function openCreateShowModal(date = '', show = null) {
     document.getElementById('showTitle').value = show.titulo || ''
     document.getElementById('showContractor').value = show.contratante || ''
     document.getElementById('showNotes').value = show.observacoes || ''
+
+    if (canManageAgenda()) deleteBtn.classList.remove('hidden')
+    else deleteBtn.classList.add('hidden')
   } else {
+    if (!canManageAgenda()) {
+      alert('Você só pode visualizar a agenda.')
+      return
+    }
+
     editingId = null
     editingOriginalShow = null
     title.innerText = 'Novo show'
@@ -140,6 +213,8 @@ function openCreateShowModal(date = '', show = null) {
     document.getElementById('showContractor').value = ''
     document.getElementById('showNotes').value = ''
   }
+
+  setReadOnlyMode(!canManageAgenda())
 }
 
 function closeCreateShowModal() {
@@ -148,7 +223,7 @@ function closeCreateShowModal() {
 }
 
 function attemptCloseModal() {
-  if (confirm('Cancelar?')) closeCreateShowModal()
+  closeCreateShowModal()
 }
 
 document.addEventListener('click', function (event) {
@@ -159,6 +234,13 @@ document.addEventListener('click', function (event) {
 })
 
 async function saveShow() {
+  await loadCurrentUserRole()
+
+  if (!canManageAgenda()) {
+    alert('Você não tem permissão para alterar a agenda.')
+    return
+  }
+
   const data = document.getElementById('showDate').value
   const horario = document.getElementById('showTime').value || null
   const cidade = document.getElementById('showCity').value
@@ -239,6 +321,13 @@ async function saveShow() {
 }
 
 async function deleteCurrentShow() {
+  await loadCurrentUserRole()
+
+  if (!canManageAgenda()) {
+    alert('Você não tem permissão para excluir.')
+    return
+  }
+
   if (!editingId) return
 
   const confirmar = confirm('Excluir essa data?')

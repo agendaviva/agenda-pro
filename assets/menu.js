@@ -130,9 +130,13 @@ window.addEventListener("DOMContentLoaded", async () => {
             Configurações
           </a>
 
-          <a href="./suporte.html" class="${activeClass("suporte.html")} block px-4 py-3 rounded-2xl font-semibold">
-            Suporte
+          <!-- 🔥 SUPORTE (AGORA FUNCIONA 100%) -->
+          <a href="javascript:void(0)"
+             onclick="window.location.href='suporte.html'"
+             class="${activeClass("suporte.html")} block px-4 py-3 rounded-2xl font-semibold">
+             Suporte
           </a>
+
         </nav>
       </div>
 
@@ -141,6 +145,7 @@ window.addEventListener("DOMContentLoaded", async () => {
           Sair
         </button>
       </div>
+
     </aside>
   `;
 
@@ -166,7 +171,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   document.getElementById("createProjectBtn")?.addEventListener("click", () => {
-    window.location.href = "./novo-projeto.html";
+    window.location.href = "novo-projeto.html";
   });
 
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {
@@ -174,6 +179,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       await window.supabase.auth.signOut();
     }
     localStorage.removeItem("activeProjectId");
-    window.location.href = "./login.html";
+    window.location.href = "login.html";
   });
 });

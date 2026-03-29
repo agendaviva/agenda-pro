@@ -1,7 +1,47 @@
 import { supabase } from './supabase.js'
 
+let currentUserRole = null
+
 function getActiveProjectId() {
   return localStorage.getItem('activeProjectId')
+}
+
+async function getUser() {
+  const { data, error } = await supabase.auth.getUser()
+
+  if (error || !data.user) {
+    window.location.href = 'login.html'
+    return null
+  }
+
+  return data.user
+}
+
+async function loadCurrentUserRole() {
+  const user = await getUser()
+  if (!user) return null
+
+  const activeProjectId = getActiveProjectId()
+  if (!activeProjectId) return null
+
+  const { data, error } = await supabase
+    .from('project_members')
+    .select('role')
+    .eq('project_id', activeProjectId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (error || !data) {
+    currentUserRole = null
+    return null
+  }
+
+  currentUserRole = data.role || null
+  return currentUserRole
+}
+
+function canManageAgenda() {
+  return currentUserRole === 'admin' || currentUserRole === 'editor'
 }
 
 function normalizeDate(dateValue) {
@@ -38,7 +78,8 @@ function getStatusMeta(status) {
       label: 'Confirmado',
       wrapperClass: 'border-green-200 bg-green-50',
       badgeClass: 'bg-green-100 text-green-700 border border-green-200',
-      dotClass: 'bg-green-500'
+      textClass: 'text-green-700',
+      emptyDotClass: 'bg-green-500'
     }
   }
 
@@ -46,139 +87,181 @@ function getStatusMeta(status) {
     label: 'Reserva',
     wrapperClass: 'border-amber-200 bg-amber-50',
     badgeClass: 'bg-amber-100 text-amber-700 border border-amber-200',
-    dotClass: 'bg-amber-500'
+    textClass: 'text-amber-700',
+    emptyDotClass: 'bg-amber-500'
   }
 }
 
-function renderEmptyDay(container) {
-  container.innerHTML = `
-    <div class="rounded-2xl border border-dashed border-gray-200 px-3 py-4 text-sm text-gray-400 text-center bg-gray-50/60">
-      Sem eventos
+function renderShowCard(show) {
+  const meta = getStatusMeta(show.status)
+  const titulo = escapeHtml(show.titulo || 'Sem título')
+  const horario = escapeHtml(show.horario || 'Sem horário')
+  const cidade = escapeHtml(show.cidade || '')
+  const estado = escapeHtml(show.estado || '')
+  const contratante = escapeHtml(show.contratante || '')
+  const localTexto = cidade ? `${cidade}${estado ? `/${estado}` : ''}` : 'Cidade não definida'
+
+  const el = document.createElement('button')
+  el.type = 'button'
+  el.className = `w-full text-left rounded-2xl border p-3 mt-2 transition hover:shadow-sm ${meta.wrapperClass}`
+  el.dataset.showId = show.id
+
+  el.innerHTML = `
+    <div class="flex items-start justify-between gap-2 mb-2">
+      <div class="min-w-0">
+        <p class="font-semibold text-gray-900 truncate">${titulo}</p>
+        <p class="text-xs text-gray-600 mt-1">${horario}</p>
+      </div>
+
+      <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold ${meta.badgeClass}">
+        <span class="w-2 h-2 rounded-full ${meta.emptyDotClass}"></span>
+        ${meta.label}
+      </span>
     </div>
+
+    <p class="text-sm text-gray-700 truncate">${localTexto}</p>
+
+    <p class="text-xs text-gray-500 mt-1 truncate">
+      ${contratante ? `Contratante: ${contratante}` : 'Sem contratante'}
+    </p>
+
+    <p class="text-xs font-semibold mt-2 ${meta.textClass}">
+      ${meta.label}
+    </p>
   `
-}
 
-function createShowCard(show) {
-  const statusMeta = getStatusMeta(show.status)
-  const horario = show.horario ? escapeHtml(show.horario) : 'Sem horário'
-  const titulo = show.titulo ? escapeHtml(show.titulo) : 'Sem título'
-  const cidadeEstado = [show.cidade, show.estado].filter(Boolean).map(escapeHtml).join('/')
-
-  return `
-    <button
-      type="button"
-      class="show-card w-full text-left rounded-2xl border p-3 transition hover:shadow-sm ${statusMeta.wrapperClass}"
-      data-show-id="${show.id}"
-    >
-      <div class="flex items-start justify-between gap-3 mb-2">
-        <div class="min-w-0">
-          <p class="font-semibold text-gray-900 leading-tight truncate">${titulo}</p>
-          <p class="text-xs text-gray-600 mt-1">${horario}</p>
-        </div>
-
-        <span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold ${statusMeta.badgeClass}">
-          <span class="w-2 h-2 rounded-full ${statusMeta.dotClass}"></span>
-          ${statusMeta.label}
-        </span>
-      </div>
-
-      <div class="space-y-1">
-        <p class="text-sm text-gray-700 truncate">
-          ${cidadeEstado || 'Cidade não definida'}
-        </p>
-
-        <p class="text-xs text-gray-500 truncate">
-          ${show.contratante ? `Contratante: ${escapeHtml(show.contratante)}` : 'Sem contratante'}
-        </p>
-
-        <p class="text-xs font-medium ${show.status === 'confirmado' ? 'text-green-700' : 'text-amber-700'}">
-          ${statusMeta.label}
-        </p>
-      </div>
-    </button>
-  `
-}
-
-function bindShowCardEvents(shows) {
-  document.querySelectorAll('.show-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const showId = card.dataset.showId
-      const show = shows.find(item => String(item.id) === String(showId))
-      if (show && window.openCreateShowModal) {
-        window.openCreateShowModal(null, show)
-      }
-    })
-  })
-}
-
-function renderShowsInCalendar(shows) {
-  const dayCards = document.querySelectorAll('[data-date]')
-
-  dayCards.forEach(dayCard => {
-    const date = dayCard.getAttribute('data-date')
-    const eventsContainer = dayCard.querySelector('.events-container')
-    if (!eventsContainer) return
-
-    const dayShows = sortShows(
-      shows.filter(show => normalizeDate(show.data) === date)
-    )
-
-    if (!dayShows.length) {
-      renderEmptyDay(eventsContainer)
-      return
+  el.addEventListener('click', () => {
+    if (window.openCreateShowModal) {
+      window.openCreateShowModal(null, show)
     }
+  })
 
-    eventsContainer.innerHTML = `
-      <div class="space-y-2">
-        ${dayShows.map(createShowCard).join('')}
+  return el
+}
+
+function ensureEmptyState(container) {
+  if (!container.querySelector('[data-show-id]')) {
+    container.innerHTML = `
+      <div class="rounded-2xl border border-dashed border-gray-200 px-3 py-4 text-sm text-gray-400 text-center bg-gray-50/60">
+        Sem eventos
       </div>
     `
-  })
-
-  bindShowCardEvents(shows)
+  }
 }
 
-async function loadShows() {
-  const projectId = getActiveProjectId()
-  if (!projectId) return
+function removeEmptyState(container) {
+  const hasOnlyEmpty =
+    container.children.length === 1 &&
+    container.textContent.trim() === 'Sem eventos'
 
-  const { data, error } = await supabase
-    .from('shows')
-    .select('*')
-    .eq('project_id', projectId)
+  if (hasOnlyEmpty) {
+    container.innerHTML = ''
+  }
+}
 
-  if (error) {
-    console.error('Erro ao carregar shows:', error)
+function getDayContainerByDate(date) {
+  const cleanDate = normalizeDate(date)
+  const day = document.querySelector(`[data-date="${cleanDate}"]`)
+  if (!day) return null
+  return day.querySelector('.events-container')
+}
 
-    document.querySelectorAll('.events-container').forEach(container => {
-      container.innerHTML = `
-        <div class="rounded-2xl border border-red-100 bg-red-50 px-3 py-4 text-sm text-red-600 text-center">
-          Erro ao carregar eventos
-        </div>
-      `
-    })
+function addShowToCalendar(show) {
+  const container = getDayContainerByDate(show.data)
+  if (!container) return
 
+  removeEmptyState(container)
+  container.appendChild(renderShowCard(show))
+}
+
+function removeShowFromCalendar(showId, date) {
+  const container = getDayContainerByDate(date)
+  if (!container) return
+
+  const card = container.querySelector(`[data-show-id="${showId}"]`)
+  if (card) card.remove()
+
+  ensureEmptyState(container)
+}
+
+function updateShowInCalendar(oldShow, updatedShow) {
+  const oldDate = normalizeDate(oldShow.data)
+  const newDate = normalizeDate(updatedShow.data)
+
+  if (oldDate !== newDate) {
+    removeShowFromCalendar(oldShow.id, oldDate)
+    addShowToCalendar(updatedShow)
     return
   }
 
-  renderShowsInCalendar(data || [])
+  const container = getDayContainerByDate(oldDate)
+  if (!container) return
+
+  const oldCard = container.querySelector(`[data-show-id="${oldShow.id}"]`)
+  if (oldCard) {
+    oldCard.replaceWith(renderShowCard(updatedShow))
+  }
 }
 
-function addShowToCalendar() {
-  loadShows()
-}
+async function loadShows() {
+  const user = await getUser()
+  if (!user) return
 
-function updateShowInCalendar() {
-  loadShows()
-}
+  await loadCurrentUserRole()
 
-function removeShowFromCalendar() {
-  loadShows()
+  const activeProjectId = getActiveProjectId()
+
+  if (!activeProjectId) {
+    document.querySelectorAll('.events-container').forEach(container => {
+      ensureEmptyState(container)
+    })
+    return
+  }
+
+  const { data: shows, error } = await supabase
+    .from('shows')
+    .select('*')
+    .eq('project_id', activeProjectId)
+
+  if (error) {
+    console.error('Erro ao buscar shows:', error)
+    return
+  }
+
+  document.querySelectorAll('.events-container').forEach(container => {
+    container.innerHTML = ''
+    ensureEmptyState(container)
+  })
+
+  const grouped = {}
+
+  sortShows(shows || []).forEach(show => {
+    const date = normalizeDate(show.data)
+    if (!grouped[date]) grouped[date] = []
+    grouped[date].push(show)
+  })
+
+  Object.keys(grouped).forEach(date => {
+    const container = getDayContainerByDate(date)
+    if (!container) return
+
+    container.innerHTML = ''
+
+    grouped[date].forEach(show => {
+      container.appendChild(renderShowCard(show))
+    })
+  })
 }
 
 window.loadShows = loadShows
 window.addShowToCalendar = addShowToCalendar
-window.updateShowInCalendar = updateShowInCalendar
 window.removeShowFromCalendar = removeShowFromCalendar
+window.updateShowInCalendar = updateShowInCalendar
+window.canManageAgenda = canManageAgenda
+window.loadCurrentUserRole = loadCurrentUserRole
 
 window.addEventListener('showsChanged', loadShows)
+
+setTimeout(() => {
+  loadShows()
+}, 0)

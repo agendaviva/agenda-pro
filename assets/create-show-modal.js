@@ -28,6 +28,7 @@ document.getElementById("create-show-modal-container").innerHTML = `
               <div>
                 <label>Horário</label>
                 <input id="showTime" type="time" class="w-full h-12 px-3 border rounded-xl">
+                <p class="text-xs text-gray-500 mt-1">Pode deixar vazio. Vai aparecer como “Ainda não definido”.</p>
               </div>
 
               <div>
@@ -123,7 +124,7 @@ document.addEventListener('click', function (event) {
 
 async function saveShow() {
   const data = document.getElementById('showDate').value
-  const horario = document.getElementById('showTime').value
+  const horario = document.getElementById('showTime').value || null
   const cidade = document.getElementById('showCity').value
   const estado = document.getElementById('showState').value
   const titulo = document.getElementById('showTitle').value

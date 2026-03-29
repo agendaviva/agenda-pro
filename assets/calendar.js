@@ -1,7 +1,7 @@
 import { supabase } from './supabase.js'
 
 function formatShowTime(horario) {
-  return horario && horario.trim() ? horario : 'Ainda não definido'
+  return horario && horario.trim() ? horario : 'Horário não definido'
 }
 
 function renderShowCard(show) {

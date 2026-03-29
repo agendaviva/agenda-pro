@@ -33,22 +33,71 @@ async function getUser() {
 
 function getErrorMessage(error, fallback = 'Erro ao criar agenda.') {
   if (!error) return fallback
-  return (
-    error.message ||
-    error.details ||
-    error.hint ||
-    JSON.stringify(error) ||
-    fallback
-  )
+  return error.message || error.details || error.hint || fallback
 }
 
-async function createProject(name, userId) {
+function add30DaysIso() {
+  const date = new Date()
+  date.setDate(date.getDate() + 30)
+  return date.toISOString()
+}
+
+async function ensureProfile(user) {
+  const email = user.email || ''
+  const nome = user.user_metadata?.nome || ''
+
+  const { data: existingProfile, error: selectError } = await supabase
+    .from('profiles')
+    .select('id, coins')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (selectError) {
+    throw new Error(`Erro ao buscar perfil: ${getErrorMessage(selectError)}`)
+  }
+
+  if (existingProfile) {
+    return existingProfile
+  }
+
+  const { data: createdProfile, error: insertError } = await supabase
+    .from('profiles')
+    .insert([
+      {
+        id: user.id,
+        nome,
+        email,
+        coins: 0
+      }
+    ])
+    .select('id, coins')
+    .single()
+
+  if (insertError) {
+    throw new Error(`Erro ao criar perfil: ${getErrorMessage(insertError)}`)
+  }
+
+  return createdProfile
+}
+
+async function createProject(name, user) {
+  const profile = await ensureProfile(user)
+  const currentCoins = Number(profile?.coins || 0)
+
+  if (currentCoins < 1) {
+    throw new Error('Você não tem moedas suficientes para criar uma nova agenda.')
+  }
+
+  const expiresAt = add30DaysIso()
+
   const { data: project, error: projectError } = await supabase
     .from('projects')
     .insert([
       {
         name,
-        owner_user_id: userId
+        owner_user_id: user.id,
+        expires_at: expiresAt,
+        is_active: true
       }
     ])
     .select()
@@ -63,7 +112,7 @@ async function createProject(name, userId) {
     .insert([
       {
         project_id: project.id,
-        user_id: userId,
+        user_id: user.id,
         role: 'admin'
       }
     ])
@@ -75,6 +124,20 @@ async function createProject(name, userId) {
       .eq('id', project.id)
 
     throw new Error(`Erro em project_members: ${getErrorMessage(memberError)}`)
+  }
+
+  const { error: coinUpdateError } = await supabase
+    .from('profiles')
+    .update({
+      coins: currentCoins - 1
+    })
+    .eq('id', user.id)
+
+  if (coinUpdateError) {
+    await supabase.from('project_members').delete().eq('project_id', project.id)
+    await supabase.from('projects').delete().eq('id', project.id)
+
+    throw new Error(`Erro ao consumir moeda: ${getErrorMessage(coinUpdateError)}`)
   }
 
   return project
@@ -98,7 +161,7 @@ async function handleSubmit(event) {
   showMessage('Criando agenda...')
 
   try {
-    const project = await createProject(name, user.id)
+    const project = await createProject(name, user)
 
     localStorage.setItem('activeProjectId', project.id)
 

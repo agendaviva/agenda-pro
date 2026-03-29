@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Agenda Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-white min-h-screen">
+
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-72 bg-gray-950 border-r border-gray-800 p-6 hidden md:block">
+      <div class="mb-10">
+        <h1 class="text-2xl font-bold text-white">Agenda Pro</h1>
+        <p class="text-sm text-gray-400 mt-1">Painel do empresário</p>
+      </div>
+
+      <nav class="space-y-3">
+        <a href="#" class="block bg-green-500 text-black font-semibold px-4 py-3 rounded-xl">Dashboard</a>
+        <a href="#" class="block text-gray-300 hover:bg-gray-900 px-4 py-3 rounded-xl">Shows</a>
+        <a href="#" class="block text-gray-300 hover:bg-gray-900 px-4 py-3 rounded-xl">Equipe</a>
+        <a href="#" class="block text-gray-300 hover:bg-gray-900 px-4 py-3 rounded-xl">Mensagens</a>
+        <a href="#" class="block text-gray-300 hover:bg-gray-900 px-4 py-3 rounded-xl">Configurações</a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 p-6 md:p-10">
+      <!-- Topbar -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+          <h2 class="text-3xl font-bold">Bem-vindo, Felipe 👋</h2>
+          <p class="text-gray-400 mt-1">Aqui você acompanha shows, equipe e automações.</p>
+        </div>
+        <button class="bg-green-500 hover:bg-green-600 text-black font-semibold px-6 py-3 rounded-2xl">
+          + Criar Show
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+          <p class="text-gray-400 text-sm mb-2">Shows este mês</p>
+          <h3 class="text-4xl font-bold">12</h3>
+        </div>
+
+        <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+          <p class="text-gray-400 text-sm mb-2">Usuários no plano</p>
+          <h3 class="text-4xl font-bold">3</h3>
+        </div>
+
+        <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+          <p class="text-gray-400 text-sm mb-2">Mensagens enviadas</p>
+          <h3 class="text-4xl font-bold">84</h3>
+        </div>
+      </section>
+
+      <!-- Próximos shows -->
+      <section class="bg-gray-900 rounded-2xl p-6 border border-gray-800 mb-8">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-2xl font-bold">Próximos Shows</h3>
+          <a href="#" class="text-green-400 text-sm">Ver todos</a>
+        </div>
+
+        <div class="space-y-4">
+          <div class="bg-black border border-gray-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <p class="font-semibold text-lg">23/04 - Almadina/BA</p>
+              <p class="text-gray-400">Vaquejada do Parque</p>
+            </div>
+            <span class="bg-green-500/20 text-green-400 px-4 py-2 rounded-xl text-sm">Confirmado</span>
+          </div>
+
+          <div class="bg-black border border-gray-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <p class="font-semibold text-lg">25/04 - Itabuna/BA</p>
+              <p class="text-gray-400">Aniversário da Cidade</p>
+            </div>
+            <span class="bg-yellow-500/20 text-yellow-400 px-4 py-2 rounded-xl text-sm">Pendente</span>
+          </div>
+
+          <div class="bg-black border border-gray-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <p class="font-semibold text-lg">28/04 - Ilhéus/BA</p>
+              <p class="text-gray-400">Festival de Arrocha</p>
+            </div>
+            <span class="bg-blue-500/20 text-blue-400 px-4 py-2 rounded-xl text-sm">Agendado</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Equipe -->
+      <section class="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-2xl font-bold">Usuários da Equipe</h3>
+          <button class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl text-sm">
+            + Adicionar usuário
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-black border border-gray-800 rounded-2xl p-4">
+            <p class="font-semibold">Felipe</p>
+            <p class="text-gray-400 text-sm">Administrador</p>
+          </div>
+
+          <div class="bg-black border border-gray-800 rounded-2xl p-4">
+            <p class="font-semibold">Luiz</p>
+            <p class="text-gray-400 text-sm">Produção</p>
+          </div>
+
+          <div class="bg-black border border-gray-800 rounded-2xl p-4">
+            <p class="font-semibold">Equipe Técnica</p>
+            <p class="text-gray-400 text-sm">Operacional</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+</body>
+</html>

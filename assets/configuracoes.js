@@ -1,87 +1,129 @@
-const currentPage = window.location.pathname.split("/").pop();
+import { supabase } from './supabase.js'
 
-function activeClass(page) {
-  return currentPage === page
-    ? "bg-green-600 text-white"
-    : "text-gray-700 hover:bg-green-50";
+const userNameInput = document.getElementById('userName')
+const userEmailInput = document.getElementById('userEmail')
+
+const passwordForm = document.getElementById('passwordForm')
+const currentPasswordInput = document.getElementById('currentPassword')
+const newPasswordInput = document.getElementById('newPassword')
+const confirmPasswordInput = document.getElementById('confirmPassword')
+const messageEl = document.getElementById('message')
+
+function showMessage(text, type = 'default') {
+  if (!messageEl) return
+
+  messageEl.textContent = text
+  messageEl.className = 'text-sm mt-4'
+
+  if (type === 'success') {
+    messageEl.classList.add('text-green-600')
+  } else if (type === 'error') {
+    messageEl.classList.add('text-red-600')
+  } else {
+    messageEl.classList.add('text-gray-500')
+  }
 }
 
-// deixa global desde já
-window.toggleMenu = function () {
-  const sidebar = document.getElementById("sidebar");
-  const overlay = document.getElementById("overlay");
+async function getUser() {
+  const { data, error } = await supabase.auth.getUser()
 
-  if (!sidebar || !overlay) return;
-
-  sidebar.classList.toggle("-translate-x-full");
-  overlay.classList.toggle("hidden");
-};
-
-window.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("menu-container");
-  if (!container) return;
-
-  container.innerHTML = `
-    <!-- Overlay -->
-    <div id="overlay" class="fixed inset-0 bg-black/40 hidden z-40 md:hidden"></div>
-
-    <!-- Sidebar -->
-    <aside id="sidebar" class="fixed z-50 top-0 left-0 h-full w-72 bg-white border-r border-green-100 p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 shadow-lg flex flex-col">
-
-      <div>
-        <div class="mb-10">
-          <h1 class="text-2xl font-bold text-green-700">Agenda Lux</h1>
-          <p class="text-sm text-gray-500 mt-1">Painel do empresário</p>
-        </div>
-
-        <nav class="space-y-3">
-          <a href="dashboard.html" class="block px-4 py-3 rounded-2xl font-semibold ${activeClass("dashboard.html")}">
-            Dashboard
-          </a>
-
-          <a href="calendario.html" class="block px-4 py-3 rounded-2xl font-semibold ${activeClass("calendario.html")}">
-            Calendário
-          </a>
-
-          <a href="equipe.html" class="block px-4 py-3 rounded-2xl font-semibold ${activeClass("equipe.html")}">
-            Equipe
-          </a>
-
-          <a href="mensagens.html" class="block px-4 py-3 rounded-2xl font-semibold ${activeClass("mensagens.html")}">
-            Mensagens
-          </a>
-
-          <a href="configuracoes.html" class="block px-4 py-3 rounded-2xl font-semibold ${activeClass("configuracoes.html")}">
-            Configurações
-          </a>
-        </nav>
-      </div>
-
-      <div class="mt-auto pt-6 border-t border-green-100">
-        <button id="logoutBtn" class="w-full text-left px-4 py-3 rounded-2xl text-red-600 hover:bg-red-50 text-sm font-medium transition">
-          Sair
-        </button>
-      </div>
-    </aside>
-  `;
-
-  const sidebar = document.getElementById("sidebar");
-  const overlay = document.getElementById("overlay");
-  const logoutBtn = document.getElementById("logoutBtn");
-
-  if (overlay) {
-    overlay.addEventListener("click", () => {
-      sidebar.classList.add("-translate-x-full");
-      overlay.classList.add("hidden");
-    });
+  if (error || !data.user) {
+    window.location.href = 'login.html'
+    return null
   }
 
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      if (window.supabase) {
-        await window.supabase.auth.signOut();
-      }
-      window.location.href = "login.html";
-    });
+  return data.user
+}
+
+async function loadUserData() {
+  const user = await getUser()
+  if (!user) return
+
+  const nome =
+    user.user_metadata?.nome ||
+    user.user_metadata?.name ||
+    user.email ||
+    ''
+
+  const email = user.email || ''
+
+  if (userNameInput) userNameInput.value = nome
+  if (userEmailInput) userEmailInput.value = email
+}
+
+async function updatePassword(event) {
+  event.preventDefault()
+
+  const currentPassword = currentPasswordInput.value.trim()
+  const newPassword = newPasswordInput.value.trim()
+  const confirmPassword = confirmPasswordInput.value.trim()
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    showMessage('Preencha todos os campos.', 'error')
+    return
   }
-});
+
+  if (newPassword.length < 6) {
+    showMessage('A nova senha deve ter pelo menos 6 caracteres.', 'error')
+    return
+  }
+
+  if (newPassword !== confirmPassword) {
+    showMessage('As novas senhas não coincidem.', 'error')
+    return
+  }
+
+  if (currentPassword === newPassword) {
+    showMessage('A nova senha deve ser diferente da senha atual.', 'error')
+    return
+  }
+
+  showMessage('Validando senha atual...')
+
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+
+  if (userError || !userData.user) {
+    showMessage('Sessão inválida. Faça login novamente.', 'error')
+    window.location.href = 'login.html'
+    return
+  }
+
+  const email = userData.user.email
+
+  if (!email) {
+    showMessage('Não foi possível identificar o e-mail do usuário.', 'error')
+    return
+  }
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email,
+    password: currentPassword
+  })
+
+  if (signInError) {
+    showMessage('Senha atual incorreta.', 'error')
+    return
+  }
+
+  showMessage('Atualizando senha...')
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: newPassword
+  })
+
+  if (updateError) {
+    showMessage(updateError.message || 'Erro ao atualizar senha.', 'error')
+    return
+  }
+
+  passwordForm.reset()
+  showMessage('Senha atualizada com sucesso.', 'success')
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadUserData()
+
+  if (passwordForm) {
+    passwordForm.addEventListener('submit', updatePassword)
+  }
+})

@@ -16,6 +16,46 @@ window.toggleMenu = function () {
   overlay.classList.toggle('hidden')
 }
 
+function getPlanStatus(planExpiresAt) {
+  if (!planExpiresAt) {
+    return {
+      text: 'Plano expirado',
+      badgeClass: 'bg-red-50 border border-red-200 text-red-700'
+    }
+  }
+
+  const now = new Date()
+  const expires = new Date(planExpiresAt)
+  const diffMs = expires.getTime() - now.getTime()
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffDays <= 0) {
+    return {
+      text: 'Plano expirado',
+      badgeClass: 'bg-red-50 border border-red-200 text-red-700'
+    }
+  }
+
+  if (diffDays === 1) {
+    return {
+      text: '1 dia restante',
+      badgeClass: 'bg-amber-50 border border-amber-200 text-amber-700'
+    }
+  }
+
+  if (diffDays <= 5) {
+    return {
+      text: `${diffDays} dias restantes`,
+      badgeClass: 'bg-amber-50 border border-amber-200 text-amber-700'
+    }
+  }
+
+  return {
+    text: `${diffDays} dias restantes`,
+    badgeClass: 'bg-green-50 border border-green-200 text-green-700'
+  }
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   const container = document.getElementById('menu-container')
   if (!container) return
@@ -27,6 +67,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   let projects = []
   let activeProjectId = localStorage.getItem('activeProjectId')
   let activeProjectName = 'Selecionar agenda'
+  let activeProjectPlanExpiresAt = null
 
   if (supabase) {
     const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -39,7 +80,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       const fallbackName = user.user_metadata?.nome || ''
       const fallbackEmail = user.email || ''
 
-      // APENAS LÊ O PROFILE
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id, nome, email, coins, is_admin')
@@ -63,7 +103,8 @@ window.addEventListener('DOMContentLoaded', async () => {
           role,
           projects:project_id (
             id,
-            name
+            name,
+            plan_expires_at
           )
         `)
         .eq('user_id', user.id)
@@ -75,7 +116,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         projects = memberRows.map(row => ({
           project_id: row.project_id,
           role: row.role,
-          name: row.projects?.name || 'Projeto'
+          name: row.projects?.name || 'Projeto',
+          plan_expires_at: row.projects?.plan_expires_at || null
         }))
 
         if (!activeProjectId && projects.length) {
@@ -84,7 +126,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
 
         const active = projects.find(p => p.project_id === activeProjectId)
-        if (active) activeProjectName = active.name
+        if (active) {
+          activeProjectName = active.name
+          activeProjectPlanExpiresAt = active.plan_expires_at
+        }
       }
     }
   }
@@ -103,6 +148,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const initial = String(displayName).trim().charAt(0).toUpperCase() || 'U'
   const coins = Number(profile?.coins ?? 0)
   const isAdmin = profile?.is_admin === true
+  const planStatus = getPlanStatus(activeProjectPlanExpiresAt)
 
   console.log('IS ADMIN FINAL:', isAdmin)
   console.log('PROFILE IS_ADMIN RAW:', profile?.is_admin)
@@ -124,30 +170,51 @@ window.addEventListener('DOMContentLoaded', async () => {
             class="w-full flex items-center justify-between px-4 py-3 rounded-2xl border border-green-100 bg-green-50 hover:bg-green-100 transition"
             type="button"
           >
-            <div class="text-left">
+            <div class="text-left min-w-0">
               <p class="text-xs text-gray-500">Agenda atual</p>
               <p class="font-semibold text-gray-900 truncate">${activeProjectName}</p>
+              <div class="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold ${planStatus.badgeClass}">
+                <span>⏳</span>
+                <span>${planStatus.text}</span>
+              </div>
             </div>
-            <span class="text-green-700 text-lg">▾</span>
+            <span class="text-green-700 text-lg shrink-0">▾</span>
           </button>
 
           <div
             id="projectDropdown"
             class="hidden absolute left-0 top-full mt-2 w-full bg-white border border-green-100 rounded-2xl shadow-lg p-2 z-50"
           >
-            ${projects.map(p => `
-              <button
-                class="project-option w-full text-left px-4 py-3 rounded-xl ${
-                  p.project_id === activeProjectId
-                    ? 'bg-green-600 text-white'
-                    : 'text-gray-700 hover:bg-green-50'
-                }"
-                data-id="${p.project_id}"
-                type="button"
-              >
-                ${p.name}
-              </button>
-            `).join('')}
+            ${projects.map(p => {
+              const itemPlanStatus = getPlanStatus(p.plan_expires_at)
+
+              return `
+                <button
+                  class="project-option w-full text-left px-4 py-3 rounded-xl ${
+                    p.project_id === activeProjectId
+                      ? 'bg-green-600 text-white'
+                      : 'text-gray-700 hover:bg-green-50'
+                  }"
+                  data-id="${p.project_id}"
+                  type="button"
+                >
+                  <div class="flex flex-col gap-1">
+                    <span class="font-medium">${p.name}</span>
+                    <span class="text-xs ${
+                      p.project_id === activeProjectId
+                        ? 'text-white/90'
+                        : itemPlanStatus.badgeClass.includes('red')
+                          ? 'text-red-600'
+                          : itemPlanStatus.badgeClass.includes('amber')
+                            ? 'text-amber-600'
+                            : 'text-green-600'
+                    }">
+                      ${itemPlanStatus.text}
+                    </span>
+                  </div>
+                </button>
+              `
+            }).join('')}
 
             <button
               id="createProjectBtn"

@@ -2,7 +2,6 @@ import { supabase } from './supabase.js'
 
 let currentUserRole = null
 let isLoadingShows = false
-let initialBootDone = false
 
 function getActiveProjectId() {
   return localStorage.getItem('activeProjectId')
@@ -81,8 +80,8 @@ function getStatusMeta(status) {
       label: 'Confirmado',
       cardClass: 'border-green-200 bg-green-50',
       badgeClass: 'bg-green-100 text-green-700 border border-green-200',
-      dotClass: 'bg-green-500',
-      statusTextClass: 'text-green-700'
+      textClass: 'text-green-700',
+      dotClass: 'bg-green-500'
     }
   }
 
@@ -90,8 +89,8 @@ function getStatusMeta(status) {
     label: 'Reserva',
     cardClass: 'border-amber-200 bg-amber-50',
     badgeClass: 'bg-amber-100 text-amber-700 border border-amber-200',
-    dotClass: 'bg-amber-500',
-    statusTextClass: 'text-amber-700'
+    textClass: 'text-amber-700',
+    dotClass: 'bg-amber-500'
   }
 }
 
@@ -111,15 +110,12 @@ function renderShowCard(show) {
   const cidade = escapeHtml(show.cidade || '')
   const estado = escapeHtml(show.estado || '')
   const contratante = escapeHtml(show.contratante || '')
-
-  const local = cidade
-    ? `${cidade}${estado ? `/${estado}` : ''}`
-    : 'Local não definido'
+  const local = cidade ? `${cidade}${estado ? `/${estado}` : ''}` : 'Cidade não definida'
 
   const el = document.createElement('button')
   el.type = 'button'
   el.dataset.showId = show.id
-  el.className = `w-full text-left rounded-2xl border p-3 mt-2 transition hover:scale-[1.01] hover:shadow-sm ${meta.cardClass}`
+  el.className = `w-full text-left rounded-2xl border p-3 mt-2 transition hover:shadow-sm hover:scale-[1.01] ${meta.cardClass}`
 
   el.innerHTML = `
     <div class="flex items-start justify-between gap-2 mb-2">
@@ -140,7 +136,7 @@ function renderShowCard(show) {
       ${contratante ? `Contratante: ${contratante}` : 'Sem contratante'}
     </p>
 
-    <p class="text-xs font-semibold mt-2 ${meta.statusTextClass}">
+    <p class="text-xs font-semibold mt-2 ${meta.textClass}">
       ${meta.label}
     </p>
   `
@@ -229,28 +225,6 @@ async function loadShows() {
   }
 }
 
-function bootInitialLoad() {
-  if (initialBootDone) return
-  initialBootDone = true
-
-  let attempts = 0
-  const maxAttempts = 20
-
-  const interval = setInterval(async () => {
-    attempts++
-
-    if (calendarIsReady()) {
-      await loadShows()
-      clearInterval(interval)
-      return
-    }
-
-    if (attempts >= maxAttempts) {
-      clearInterval(interval)
-    }
-  }, 200)
-}
-
 function addShowToCalendar() {
   loadShows()
 }
@@ -277,21 +251,31 @@ window.addEventListener('storage', e => {
   }
 })
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    bootInitialLoad()
-  })
-} else {
-  bootInitialLoad()
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (typeof window.loadShows === 'function') {
+      window.loadShows()
+    }
+  }, 300)
+
+  setTimeout(() => {
+    if (typeof window.loadShows === 'function') {
+      window.loadShows()
+    }
+  }, 800)
+
+  setTimeout(() => {
+    if (typeof window.loadShows === 'function') {
+      window.loadShows()
+    }
+  }, 1500)
+})
+
+if (document.readyState === 'complete') {
+  setTimeout(() => {
+    loadShows()
+  }, 200)
 }
-
-setTimeout(() => {
-  loadShows()
-}, 300)
-
-setTimeout(() => {
-  loadShows()
-}, 800)
 
 window.loadShows = loadShows
 window.addShowToCalendar = addShowToCalendar

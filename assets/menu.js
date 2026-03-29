@@ -33,13 +33,32 @@ window.addEventListener('DOMContentLoaded', async () => {
     user = userData?.user || null
 
     if (user) {
+      const fallbackName = user.user_metadata?.nome || ''
+      const fallbackEmail = user.email || ''
+
+      // garante perfil básico se não existir
+      await supabase
+        .from('profiles')
+        .upsert(
+          [{
+            id: user.id,
+            nome: fallbackName,
+            email: fallbackEmail
+          }],
+          { onConflict: 'id' }
+        )
+
       const { data: profileData } = await supabase
         .from('profiles')
         .select('nome, email, coins')
         .eq('id', user.id)
         .maybeSingle()
 
-      profile = profileData || null
+      profile = profileData || {
+        nome: fallbackName,
+        email: fallbackEmail,
+        coins: 0
+      }
 
       const { data: memberRows } = await supabase
         .from('project_members')
@@ -53,7 +72,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         `)
         .eq('user_id', user.id)
 
-      if (memberRows) {
+      if (memberRows && memberRows.length) {
         projects = memberRows.map(row => ({
           project_id: row.project_id,
           role: row.role,

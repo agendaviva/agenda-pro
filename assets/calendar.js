@@ -1,12 +1,14 @@
-function groupShowsByDate(shows) {
-  const grouped = {}
+import { supabase } from './supabase.js'
 
-  shows.forEach(show => {
-    if (!grouped[show.data]) {
-      grouped[show.data] = []
-    }
-    grouped[show.data].push(show)
-  })
+export async function renderCalendarShows() {
+  const { data: shows, error } = await supabase
+    .from('shows')
+    .select('*')
 
-  return grouped
+  if (error) {
+    console.error(error)
+    return
+  }
+
+  console.log('Shows:', shows)
 }

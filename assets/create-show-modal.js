@@ -13,55 +13,67 @@ document.getElementById("create-show-modal-container").innerHTML = `
           
           <div class="flex items-center justify-between px-5 py-4 border-b">
             <h3 id="modalTitle" class="text-2xl font-light text-gray-700">Novo show</h3>
-            <button onclick="attemptCloseModal()" class="text-3xl text-gray-400">&times;</button>
+            <button onclick="attemptCloseModal()" class="text-3xl text-gray-400 hover:text-gray-700">&times;</button>
           </div>
 
           <div class="overflow-y-auto px-5 py-6">
 
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <p class="text-sm text-gray-500">Gerencie os dados do show</p>
+              </div>
+
+              <button
+                id="deleteShowBtn"
+                onclick="deleteCurrentShow()"
+                class="hidden bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-xl text-sm font-medium transition"
+              >
+                Excluir data
+              </button>
+            </div>
+
             <div class="grid md:grid-cols-2 gap-5">
 
               <div>
-                <label>Data</label>
+                <label class="block mb-2 text-sm font-medium text-gray-700">Data</label>
                 <input id="showDate" type="date" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div>
-                <label>Horário</label>
-                <input id="showTime" type="time" placeholder="Ainda não definido" class="w-full h-12 px-3 border rounded-xl">
-<p class="text-xs text-gray-400 mt-1">Se não definir, ficará sem horário</p>
-
-                <p class="text-xs text-gray-500 mt-1">Pode deixar vazio. Vai aparecer como “Ainda não definido”.</p>
+                <label class="block mb-2 text-sm font-medium text-gray-700">Horário</label>
+                <input id="showTime" type="time" class="w-full h-12 px-3 border rounded-xl">
+                <p class="text-xs text-gray-400 mt-1">Se não definir, ficará sem horário.</p>
               </div>
 
               <div>
-                <label>Estado</label>
+                <label class="block mb-2 text-sm font-medium text-gray-700">Estado</label>
                 <input id="showState" type="text" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div>
-                <label>Cidade</label>
+                <label class="block mb-2 text-sm font-medium text-gray-700">Cidade</label>
                 <input id="showCity" type="text" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div class="md:col-span-2">
-                <label>Título</label>
+                <label class="block mb-2 text-sm font-medium text-gray-700">Título</label>
                 <input id="showTitle" type="text" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div class="md:col-span-2">
-                <label>Contratante</label>
+                <label class="block mb-2 text-sm font-medium text-gray-700">Contratante</label>
                 <input id="showContractor" type="text" class="w-full h-12 px-3 border rounded-xl">
               </div>
 
               <div class="md:col-span-2">
-                <label>Observações</label>
+                <label class="block mb-2 text-sm font-medium text-gray-700">Observações</label>
                 <textarea id="showNotes" class="w-full p-3 border rounded-xl"></textarea>
               </div>
 
             </div>
 
             <div class="text-center mt-6">
-              <button onclick="saveShow()" class="bg-green-500 text-white px-8 py-3 rounded-xl">
+              <button onclick="saveShow()" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl">
                 Salvar
               </button>
             </div>
@@ -74,17 +86,23 @@ document.getElementById("create-show-modal-container").innerHTML = `
   </div>
 `
 
+function emitShowsChanged() {
+  window.dispatchEvent(new CustomEvent('showsChanged'))
+}
+
 function openCreateShowModal(date = '', show = null) {
   const modal = document.getElementById('createShowModal')
+  const title = document.getElementById('modalTitle')
+  const deleteBtn = document.getElementById('deleteShowBtn')
+
   modal.classList.remove('hidden')
   document.body.classList.add('overflow-hidden')
-
-  const title = document.getElementById('modalTitle')
 
   if (show) {
     editingId = show.id
     editingOriginalShow = { ...show }
     title.innerText = 'Editar show'
+    deleteBtn.classList.remove('hidden')
 
     document.getElementById('showDate').value = show.data || ''
     document.getElementById('showTime').value = show.horario || ''
@@ -97,6 +115,7 @@ function openCreateShowModal(date = '', show = null) {
     editingId = null
     editingOriginalShow = null
     title.innerText = 'Novo show'
+    deleteBtn.classList.add('hidden')
 
     document.getElementById('showDate').value = date || ''
     document.getElementById('showTime').value = ''
@@ -192,8 +211,34 @@ async function saveShow() {
   }
 
   closeCreateShowModal()
+  emitShowsChanged()
+}
+
+async function deleteCurrentShow() {
+  if (!editingId) return
+
+  const confirmar = confirm('Excluir essa data?')
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('shows')
+    .delete()
+    .eq('id', editingId)
+
+  if (error) {
+    alert('Erro ao excluir')
+    return
+  }
+
+  if (window.removeShowFromCalendar && editingOriginalShow) {
+    window.removeShowFromCalendar(editingId, editingOriginalShow.data)
+  }
+
+  closeCreateShowModal()
+  emitShowsChanged()
 }
 
 window.openCreateShowModal = openCreateShowModal
 window.saveShow = saveShow
 window.attemptCloseModal = attemptCloseModal
+window.deleteCurrentShow = deleteCurrentShow

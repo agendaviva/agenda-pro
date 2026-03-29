@@ -73,23 +73,22 @@ window.addEventListener("DOMContentLoaded", async () => {
         </div>
 
         <div class="mb-6 relative">
-          <button id="projectSwitcherBtn"
+          <button
+            id="projectSwitcherBtn"
             class="w-full flex items-center justify-between px-4 py-3 rounded-2xl border border-green-100 bg-green-50 hover:bg-green-100 transition"
-            type="button">
-            
+            type="button"
+          >
             <div class="text-left">
               <p class="text-xs text-gray-500">Agenda atual</p>
-              <p class="font-semibold text-gray-900 truncate">
-                ${activeProjectName}
-              </p>
+              <p class="font-semibold text-gray-900 truncate">${activeProjectName}</p>
             </div>
-
             <span class="text-green-700 text-lg">▾</span>
           </button>
 
-          <div id="projectDropdown"
-            class="hidden absolute left-0 top-full mt-2 w-full bg-white border border-green-100 rounded-2xl shadow-lg p-2 z-50">
-
+          <div
+            id="projectDropdown"
+            class="hidden absolute left-0 top-full mt-2 w-full bg-white border border-green-100 rounded-2xl shadow-lg p-2 z-50"
+          >
             ${projects.map(p => `
               <button
                 class="project-option w-full text-left px-4 py-3 rounded-xl ${
@@ -98,14 +97,17 @@ window.addEventListener("DOMContentLoaded", async () => {
                     : "text-gray-700 hover:bg-green-50"
                 }"
                 data-id="${p.project_id}"
-                type="button">
+                type="button"
+              >
                 ${p.name}
               </button>
             `).join("")}
 
-            <button id="createProjectBtn"
+            <button
+              id="createProjectBtn"
               class="w-full text-left px-4 py-3 rounded-xl text-green-700 hover:bg-green-50 font-medium"
-              type="button">
+              type="button"
+            >
               + Criar nova agenda
             </button>
           </div>
@@ -128,7 +130,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             Configurações
           </a>
 
-          <a href="suporte.html" class="${activeClass("suporte.html")} block px-4 py-3 rounded-2xl font-semibold">
+          <a href="./suporte.html" class="${activeClass("suporte.html")} block px-4 py-3 rounded-2xl font-semibold">
             Suporte
           </a>
         </nav>
@@ -139,7 +141,6 @@ window.addEventListener("DOMContentLoaded", async () => {
           Sair
         </button>
       </div>
-
     </aside>
   `;
 
@@ -165,7 +166,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   document.getElementById("createProjectBtn")?.addEventListener("click", () => {
-    window.location.href = "novo-projeto.html";
+    window.location.href = "./novo-projeto.html";
   });
 
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {
@@ -173,6 +174,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       await window.supabase.auth.signOut();
     }
     localStorage.removeItem("activeProjectId");
-    window.location.href = "login.html";
+    window.location.href = "./login.html";
   });
 });

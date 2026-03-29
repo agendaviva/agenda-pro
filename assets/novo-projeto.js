@@ -31,6 +31,17 @@ async function getUser() {
   return data.user
 }
 
+function getErrorMessage(error, fallback = 'Erro ao criar agenda.') {
+  if (!error) return fallback
+  return (
+    error.message ||
+    error.details ||
+    error.hint ||
+    JSON.stringify(error) ||
+    fallback
+  )
+}
+
 async function createProject(name, userId) {
   const { data: project, error: projectError } = await supabase
     .from('projects')
@@ -44,7 +55,7 @@ async function createProject(name, userId) {
     .single()
 
   if (projectError) {
-    throw projectError
+    throw new Error(`Erro em projects: ${getErrorMessage(projectError)}`)
   }
 
   const { error: memberError } = await supabase
@@ -58,7 +69,12 @@ async function createProject(name, userId) {
     ])
 
   if (memberError) {
-    throw memberError
+    await supabase
+      .from('projects')
+      .delete()
+      .eq('id', project.id)
+
+    throw new Error(`Erro em project_members: ${getErrorMessage(memberError)}`)
   }
 
   return project
@@ -93,7 +109,7 @@ async function handleSubmit(event) {
     }, 700)
   } catch (error) {
     console.error(error)
-    showMessage('Erro ao criar agenda.', 'error')
+    showMessage(error.message || 'Erro ao criar agenda.', 'error')
     createProjectBtn.disabled = false
     createProjectBtn.textContent = 'Criar agenda'
   }

@@ -4,11 +4,16 @@ function getActiveProjectId() {
   return localStorage.getItem('activeProjectId')
 }
 
+function go(url) {
+  if (window.location.pathname.endsWith(url)) return
+  window.location.href = url
+}
+
 async function getUser() {
   const { data, error } = await supabase.auth.getUser()
 
-  if (error || !data.user) {
-    window.location.href = 'login.html'
+  if (error || !data?.user) {
+    go('login.html')
     return null
   }
 
@@ -23,44 +28,95 @@ async function isMember(projectId, userId) {
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (error) return false
+  if (error) {
+    console.error('Erro ao verificar membro do projeto:', error)
+    return false
+  }
+
   return !!data
 }
 
-async function projectIsActive(projectId) {
+async function getProject(projectId) {
   const { data, error } = await supabase
-    .rpc('project_is_active', { p_project_id: projectId })
+    .from('projects')
+    .select('id, plan_expires_at')
+    .eq('id', projectId)
+    .maybeSingle()
 
-  if (error) return false
-  return data === true
+  if (error) {
+    console.error('Erro ao buscar projeto:', error)
+    return null
+  }
+
+  return data
 }
 
-async function guardProjectPage() {
+function isPlanActive(planExpiresAt) {
+  if (!planExpiresAt) return false
+  return new Date(planExpiresAt).getTime() > Date.now()
+}
+
+export async function guardProjectPage() {
   const projectId = getActiveProjectId()
 
   if (!projectId) {
-    window.location.href = 'dashboard.html'
-    return
+    go('dashboard.html')
+    return {
+      ok: false,
+      reason: 'no-project'
+    }
   }
 
   const user = await getUser()
-  if (!user) return
+  if (!user) {
+    return {
+      ok: false,
+      reason: 'no-user'
+    }
+  }
 
   const member = await isMember(projectId, user.id)
 
   if (!member) {
     localStorage.removeItem('activeProjectId')
-    window.location.href = 'dashboard.html'
-    return
+    go('dashboard.html')
+    return {
+      ok: false,
+      reason: 'not-member'
+    }
   }
 
-  const active = await projectIsActive(projectId)
+  const project = await getProject(projectId)
+
+  if (!project) {
+    localStorage.removeItem('activeProjectId')
+    go('dashboard.html')
+    return {
+      ok: false,
+      reason: 'project-not-found'
+    }
+  }
+
+  const active = isPlanActive(project.plan_expires_at)
 
   if (!active) {
-    window.location.href = 'plano-expirado.html'
-    return
+    go('plano-expirado.html')
+    return {
+      ok: false,
+      reason: 'expired'
+    }
+  }
+
+  return {
+    ok: true,
+    project
   }
 }
 
 window.guardProjectPage = guardProjectPage
-guardProjectPage()
+
+const currentPage = window.location.pathname.split('/').pop()
+
+if (currentPage !== 'plano-expirado.html' && currentPage !== 'login.html') {
+  guardProjectPage()
+}

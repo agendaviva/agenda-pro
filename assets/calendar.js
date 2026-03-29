@@ -33,14 +33,14 @@ async function loadShows() {
     const container = day.querySelector('.events-container')
     if (!container) return
 
-    // 🔥 limpa "Sem eventos" UMA VEZ
+    // limpa "Sem eventos"
     container.innerHTML = ''
 
     grouped[date].forEach(show => {
       const el = document.createElement('div')
 
       el.className =
-        'bg-white border rounded-xl p-2 mt-2 text-sm flex justify-between items-start'
+        'bg-white border rounded-xl p-2 mt-2 text-sm flex justify-between items-start cursor-pointer hover:bg-green-50 transition'
 
       el.innerHTML = `
         <div>
@@ -57,7 +57,12 @@ async function loadShows() {
         </button>
       `
 
-      // excluir
+      // 🔥 EDITAR (clicar no card)
+      el.addEventListener('click', () => {
+        window.openCreateShowModal(null, show)
+      })
+
+      // 🔥 EXCLUIR (lixeira)
       const deleteBtn = el.querySelector('.delete-btn')
 
       deleteBtn.addEventListener('click', async (e) => {
@@ -83,5 +88,8 @@ async function loadShows() {
     })
   })
 }
+
+// 🔥 importante pro calendário dinâmico
+window.loadShows = loadShows
 
 loadShows()

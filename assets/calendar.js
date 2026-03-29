@@ -1,5 +1,9 @@
 import { supabase } from './supabase.js'
 
+function getActiveProjectId() {
+  return localStorage.getItem('activeProjectId')
+}
+
 async function getUser() {
   const { data, error } = await supabase.auth.getUser()
 
@@ -97,13 +101,23 @@ async function loadShows() {
   const user = await getUser()
   if (!user) return
 
+  const activeProjectId = getActiveProjectId()
+
+  if (!activeProjectId) {
+    document.querySelectorAll('.events-container').forEach(container => {
+      container.innerHTML = '<span class="text-gray-400">Sem eventos</span>'
+    })
+    return
+  }
+
   const { data: shows, error } = await supabase
     .from('shows')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('project_id', activeProjectId)
 
   if (error) {
     alert('Erro ao buscar shows')
+    console.error(error)
     return
   }
 
@@ -113,7 +127,7 @@ async function loadShows() {
 
   const grouped = {}
 
-  shows.forEach(show => {
+  ;(shows || []).forEach(show => {
     const date = String(show.data).split('T')[0]
     if (!grouped[date]) grouped[date] = []
     grouped[date].push(show)

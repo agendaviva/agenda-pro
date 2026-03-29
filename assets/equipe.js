@@ -22,27 +22,20 @@ let currentUserRole = null
 
 function setMessage(el, text, type = 'default') {
   if (!el) return
-
   el.textContent = text
   el.className = 'text-sm'
 
-  if (type === 'success') {
-    el.classList.add('text-green-600')
-  } else if (type === 'error') {
-    el.classList.add('text-red-600')
-  } else {
-    el.classList.add('text-gray-500')
-  }
+  if (type === 'success') el.classList.add('text-green-600')
+  else if (type === 'error') el.classList.add('text-red-600')
+  else el.classList.add('text-gray-500')
 }
 
 async function getUser() {
-  const { data, error } = await supabase.auth.getUser()
-
-  if (error || !data.user) {
+  const { data } = await supabase.auth.getUser()
+  if (!data.user) {
     window.location.href = 'login.html'
     return null
   }
-
   return data.user
 }
 
@@ -58,14 +51,8 @@ function formatRole(role) {
 }
 
 function roleBadgeClass(role) {
-  if (role === 'admin') {
-    return 'bg-green-100 text-green-700 border border-green-200'
-  }
-
-  if (role === 'editor') {
-    return 'bg-blue-100 text-blue-700 border border-blue-200'
-  }
-
+  if (role === 'admin') return 'bg-green-100 text-green-700 border border-green-200'
+  if (role === 'editor') return 'bg-blue-100 text-blue-700 border border-blue-200'
   return 'bg-gray-100 text-gray-700 border border-gray-200'
 }
 
@@ -73,77 +60,52 @@ function canManageTeam() {
   return currentUserRole === 'admin'
 }
 
-function renderTeamList(members) {
-  if (!teamListEl) return
+function canManageAgenda() {
+  return currentUserRole === 'admin' || currentUserRole === 'editor'
+}
 
-  if (!members || !members.length) {
-    teamListEl.innerHTML = `
-      <div class="text-sm text-gray-400">
-        Nenhum membro encontrado neste projeto.
-      </div>
-    `
+function isViewer() {
+  return currentUserRole === 'viewer'
+}
+
+function renderTeamList(members) {
+  if (!members?.length) {
+    teamListEl.innerHTML = `<div class="text-sm text-gray-400">Nenhum membro encontrado.</div>`
     return
   }
 
   teamListEl.innerHTML = members.map(member => {
-    const memberName =
-      member.profiles?.nome ||
-      member.profiles?.name ||
-      member.profiles?.email ||
-      'Usuário'
-
-    const memberEmail = member.profiles?.email || 'Sem e-mail'
-    const role = member.role || 'viewer'
-    const isSelf = member.user_id === currentUser?.id
+    const name = member.profiles?.nome || member.profiles?.email || 'Usuário'
+    const email = member.profiles?.email || ''
+    const role = member.role
+    const isSelf = member.user_id === currentUser.id
     const canManage = canManageTeam() && !isSelf && role !== 'admin'
 
     return `
-      <div class="border border-green-100 rounded-2xl p-4 bg-white flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <p class="font-semibold text-gray-900">${memberName}</p>
-          <p class="text-sm text-gray-500">${memberEmail}</p>
-        </div>
-
-        <div class="flex flex-col md:flex-row md:items-center gap-3">
-          <span class="px-3 py-1 rounded-full text-sm font-medium ${roleBadgeClass(role)}">
-            ${formatRole(role)}
-          </span>
-
-          ${
-            canManage
-              ? `
-              <div class="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  data-change-role="${member.id}"
-                  data-role="editor"
-                  class="px-3 py-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 text-sm font-semibold hover:bg-blue-100 transition"
-                >
-                  Editor
-                </button>
-
-                <button
-                  type="button"
-                  data-change-role="${member.id}"
-                  data-role="viewer"
-                  class="px-3 py-2 rounded-xl bg-gray-50 text-gray-700 border border-gray-200 text-sm font-semibold hover:bg-gray-100 transition"
-                >
-                  Visualizador
-                </button>
-
-                <button
-                  type="button"
-                  data-remove-member="${member.id}"
-                  class="px-3 py-2 rounded-xl bg-red-50 text-red-600 border border-red-200 text-sm font-semibold hover:bg-red-100 transition"
-                >
-                  Remover
-                </button>
-              </div>
-              `
-              : ''
-          }
-        </div>
+    <div class="border rounded-2xl p-4 flex justify-between items-center">
+      <div>
+        <p class="font-semibold">${name}</p>
+        <p class="text-sm text-gray-500">${email}</p>
       </div>
+
+      <div class="flex items-center gap-2">
+        ${
+          canManage
+            ? `
+          <select data-change-role="${member.id}" class="border rounded-xl px-3 py-2">
+            <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
+            <option value="editor" ${role === 'editor' ? 'selected' : ''}>Editor</option>
+            <option value="viewer" ${role === 'viewer' ? 'selected' : ''}>Viewer</option>
+          </select>
+
+          <button data-remove-member="${member.id}" class="text-red-600 font-semibold text-sm">
+            Remover
+          </button>
+          `
+            : `<span class="px-3 py-1 rounded-full text-sm ${roleBadgeClass(role)}">${formatRole(role)}</span>`
+        }
+      </div>
+    </div>
     `
   }).join('')
 
@@ -151,327 +113,179 @@ function renderTeamList(members) {
 }
 
 function renderPendingInvites(invites) {
-  if (!pendingInvitesListEl) return
-
-  if (!invites || !invites.length) {
-    pendingInvitesListEl.innerHTML = `
-      <div class="text-sm text-gray-400">
-        Nenhum convite pendente no momento.
-      </div>
-    `
+  if (!invites?.length) {
+    pendingInvitesListEl.innerHTML = `<div class="text-sm text-gray-400">Nenhum convite pendente.</div>`
     return
   }
 
   pendingInvitesListEl.innerHTML = invites.map(invite => {
-    const role = invite.role || 'viewer'
-    const email = invite.email || 'Sem e-mail'
-
     return `
-      <div class="border border-green-100 rounded-2xl p-4 bg-white flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <p class="font-semibold text-gray-900">${email}</p>
-          <p class="text-sm text-gray-500">Status: ${invite.status || 'pending'}</p>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <span class="px-3 py-1 rounded-full text-sm font-medium ${roleBadgeClass(role)}">
-            ${formatRole(role)}
-          </span>
-        </div>
+    <div class="border rounded-2xl p-4 flex justify-between items-center">
+      <div>
+        <p class="font-semibold">${invite.email}</p>
+        <p class="text-sm text-gray-500">Convite pendente</p>
       </div>
+
+      <div class="flex items-center gap-2">
+        <span class="px-3 py-1 rounded-full text-sm ${roleBadgeClass(invite.role)}">
+          ${formatRole(invite.role)}
+        </span>
+
+        ${
+          canManageTeam()
+            ? `<button data-cancel-invite="${invite.id}" class="text-red-600 text-sm font-semibold">Cancelar</button>`
+            : ''
+        }
+      </div>
+    </div>
     `
   }).join('')
+
+  bindInviteActions()
 }
 
-async function loadProjectInfo() {
-  if (!activeProjectId) {
-    if (projectNameEl) projectNameEl.textContent = 'Nenhum projeto selecionado'
-    if (projectSubtitleEl) {
-      projectSubtitleEl.textContent = 'Selecione um projeto para gerenciar a equipe.'
-    }
-    return
-  }
+async function loadTeamMembers() {
+  const { data } = await supabase
+    .from('project_members')
+    .select('*')
+    .eq('project_id', activeProjectId)
 
-  const { data, error } = await supabase
-    .from('projects')
-    .select('id, name')
-    .eq('id', activeProjectId)
-    .single()
+  const userIds = data.map(m => m.user_id)
 
-  if (error || !data) {
-    if (projectNameEl) projectNameEl.textContent = 'Projeto não encontrado'
-    if (projectSubtitleEl) {
-      projectSubtitleEl.textContent = 'Verifique o projeto ativo selecionado.'
-    }
-    return
-  }
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('*')
+    .in('id', userIds)
 
-  if (projectNameEl) projectNameEl.textContent = data.name
-  if (projectSubtitleEl) {
-    projectSubtitleEl.textContent = 'Gerencie acessos deste projeto'
-  }
+  const map = new Map(profiles.map(p => [p.id, p]))
+
+  const merged = data.map(m => ({
+    ...m,
+    profiles: map.get(m.user_id)
+  }))
+
+  renderTeamList(merged)
 }
 
-async function loadCurrentUserRole() {
-  if (!currentUser || !activeProjectId) {
-    currentUserRole = null
-    if (currentUserRoleEl) currentUserRoleEl.textContent = '—'
-    return
-  }
+async function loadPendingInvites() {
+  const { data } = await supabase
+    .from('project_invitations')
+    .select('*')
+    .eq('project_id', activeProjectId)
+    .eq('status', 'pending')
 
-  const { data, error } = await supabase
+  renderPendingInvites(data)
+}
+
+async function createInvitation(email, role) {
+  const { data: existing } = await supabase
+    .from('project_invitations')
+    .select('id')
+    .eq('email', email)
+    .eq('project_id', activeProjectId)
+    .eq('status', 'pending')
+
+  if (existing.length) throw new Error('Convite já existe')
+
+  const token = crypto.randomUUID()
+
+  await supabase.from('project_invitations').insert({
+    project_id: activeProjectId,
+    email,
+    role,
+    token,
+    status: 'pending',
+    invited_by: currentUser.id,
+    expires_at: new Date(Date.now() + 7 * 86400000)
+  })
+
+  return `${location.origin}/convite.html?token=${token}`
+}
+
+async function cancelInvite(id) {
+  await supabase
+    .from('project_invitations')
+    .update({ status: 'canceled' })
+    .eq('id', id)
+
+  loadPendingInvites()
+}
+
+async function changeMemberRole(id, role) {
+  await supabase
+    .from('project_members')
+    .update({ role })
+    .eq('id', id)
+
+  loadTeamMembers()
+}
+
+async function removeMember(id) {
+  if (!confirm('Remover membro?')) return
+
+  await supabase
+    .from('project_members')
+    .delete()
+    .eq('id', id)
+
+  loadTeamMembers()
+}
+
+function bindMemberActions() {
+  document.querySelectorAll('[data-change-role]').forEach(el => {
+    el.onchange = () => changeMemberRole(el.dataset.changeRole, el.value)
+  })
+
+  document.querySelectorAll('[data-remove-member]').forEach(el => {
+    el.onclick = () => removeMember(el.dataset.removeMember)
+  })
+}
+
+function bindInviteActions() {
+  document.querySelectorAll('[data-cancel-invite]').forEach(el => {
+    el.onclick = () => cancelInvite(el.dataset.cancelInvite)
+  })
+}
+
+async function init() {
+  currentUser = await getUser()
+  activeProjectId = getActiveProjectId()
+
+  const { data } = await supabase
     .from('project_members')
     .select('role')
     .eq('project_id', activeProjectId)
     .eq('user_id', currentUser.id)
     .single()
 
-  if (error || !data) {
-    currentUserRole = null
-    if (currentUserRoleEl) currentUserRoleEl.textContent = '—'
-    return
-  }
+  currentUserRole = data?.role
 
-  currentUserRole = data.role || null
-  if (currentUserRoleEl) currentUserRoleEl.textContent = formatRole(data.role)
+  if (!canManageTeam()) inviteForm.style.display = 'none'
+
+  loadTeamMembers()
+  loadPendingInvites()
 }
 
-async function loadTeamMembers() {
-  if (!activeProjectId) {
-    renderTeamList([])
-    return
-  }
-
-  const { data: memberRows, error: memberError } = await supabase
-    .from('project_members')
-    .select('id, role, user_id, project_id')
-    .eq('project_id', activeProjectId)
-
-  if (memberError) {
-    console.error('Erro ao carregar equipe:', memberError)
-    renderTeamList([])
-    return
-  }
-
-  const members = memberRows || []
-
-  if (!members.length) {
-    renderTeamList([])
-    return
-  }
-
-  const userIds = [...new Set(members.map(member => member.user_id).filter(Boolean))]
-
-  const { data: profileRows, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, nome, email')
-    .in('id', userIds)
-
-  if (profileError) {
-    console.error('Erro ao carregar perfis da equipe:', profileError)
-  }
-
-  const profilesMap = new Map((profileRows || []).map(profile => [profile.id, profile]))
-
-  const merged = members.map(member => ({
-    ...member,
-    profiles: profilesMap.get(member.user_id) || null
-  }))
-
-  const sorted = [...merged].sort((a, b) => {
-    const order = { admin: 0, editor: 1, viewer: 2 }
-    return (order[a.role] ?? 99) - (order[b.role] ?? 99)
-  })
-
-  console.log('MEMBERS RAW:', members)
-  console.log('PROFILES RAW:', profileRows)
-  console.log('MEMBERS MERGED:', merged)
-
-  renderTeamList(sorted)
-}
-
-async function loadPendingInvites() {
-  if (!activeProjectId) {
-    renderPendingInvites([])
-    return
-  }
-
-  const { data, error } = await supabase
-    .from('project_invitations')
-    .select('id, email, role, status, token, created_at')
-    .eq('project_id', activeProjectId)
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Erro ao carregar convites:', error)
-    renderPendingInvites([])
-    return
-  }
-
-  renderPendingInvites(data || [])
-}
-
-function generateInviteToken() {
-  return crypto.randomUUID()
-}
-
-function buildInviteLink(token) {
-  const baseUrl = window.location.origin
-  return `${baseUrl}/convite.html?token=${token}`
-}
-
-async function createInvitation(email, role) {
-  const token = generateInviteToken()
-
-  const { error } = await supabase
-    .from('project_invitations')
-    .insert({
-      project_id: activeProjectId,
-      email,
-      role,
-      token,
-      status: 'pending',
-      invited_by: currentUser.id
-    })
-
-  if (error) {
-    throw error
-  }
-
-  return buildInviteLink(token)
-}
-
-async function handleInviteSubmit(event) {
-  event.preventDefault()
-
-  if (!currentUser) {
-    setMessage(inviteMessageEl, 'Usuário não autenticado.', 'error')
-    return
-  }
-
-  if (!activeProjectId) {
-    setMessage(inviteMessageEl, 'Nenhum projeto ativo selecionado.', 'error')
-    return
-  }
-
-  const email = inviteEmailInput?.value.trim().toLowerCase()
-  const role = inviteRoleInput?.value
-
-  if (!email) {
-    setMessage(inviteMessageEl, 'Informe um e-mail válido.', 'error')
-    return
-  }
-
-  if (!['editor', 'viewer'].includes(role)) {
-    setMessage(inviteMessageEl, 'Permissão inválida.', 'error')
-    return
-  }
-
-  setMessage(inviteMessageEl, 'Gerando convite...')
+inviteForm?.addEventListener('submit', async e => {
+  e.preventDefault()
 
   try {
-    const inviteLink = await createInvitation(email, role)
+    const link = await createInvitation(
+      inviteEmailInput.value,
+      inviteRoleInput.value
+    )
 
-    if (inviteLinkCard) inviteLinkCard.classList.remove('hidden')
-    if (generatedInviteLinkInput) generatedInviteLinkInput.value = inviteLink
-
-    setMessage(inviteMessageEl, 'Convite gerado com sucesso.', 'success')
-    inviteForm?.reset()
-
-    await loadPendingInvites()
-  } catch (error) {
-    console.error(error)
-    setMessage(inviteMessageEl, 'Erro ao gerar convite.', 'error')
-  }
-}
-
-async function copyInviteLink() {
-  const value = generatedInviteLinkInput?.value.trim()
-
-  if (!value) return
-
-  try {
-    await navigator.clipboard.writeText(value)
-    setMessage(inviteMessageEl, 'Link copiado com sucesso.', 'success')
-  } catch (error) {
-    console.error(error)
-    setMessage(inviteMessageEl, 'Não foi possível copiar o link.', 'error')
-  }
-}
-
-async function changeMemberRole(memberId, role) {
-  const { error } = await supabase
-    .from('project_members')
-    .update({ role })
-    .eq('id', memberId)
-    .eq('project_id', activeProjectId)
-
-  if (error) {
-    console.error('Erro ao alterar função:', error)
-    alert('Erro ao alterar função do membro.')
-    return
-  }
-
-  await loadTeamMembers()
-}
-
-async function removeMember(memberId) {
-  const confirmed = window.confirm('Tem certeza que deseja remover este membro da equipe?')
-  if (!confirmed) return
-
-  const { error } = await supabase
-    .from('project_members')
-    .delete()
-    .eq('id', memberId)
-    .eq('project_id', activeProjectId)
-
-  if (error) {
-    console.error('Erro ao remover membro:', error)
-    alert('Erro ao remover membro.')
-    return
-  }
-
-  await loadTeamMembers()
-}
-
-function bindMemberActions() {
-  document.querySelectorAll('[data-change-role]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const memberId = btn.dataset.changeRole
-      const role = btn.dataset.role
-      await changeMemberRole(memberId, role)
-    })
-  })
-
-  document.querySelectorAll('[data-remove-member]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const memberId = btn.dataset.removeMember
-      await removeMember(memberId)
-    })
-  })
-}
-
-async function initPage() {
-  currentUser = await getUser()
-  if (!currentUser) return
-
-  activeProjectId = getActiveProjectId()
-
-  await loadProjectInfo()
-  await loadCurrentUserRole()
-  await loadTeamMembers()
-  await loadPendingInvites()
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  initPage()
-
-  if (inviteForm) {
-    inviteForm.addEventListener('submit', handleInviteSubmit)
-  }
-
-  if (copyInviteLinkBtn) {
-    copyInviteLinkBtn.addEventListener('click', copyInviteLink)
+    inviteLinkCard.classList.remove('hidden')
+    generatedInviteLinkInput.value = link
+    setMessage(inviteMessageEl, 'Convite criado', 'success')
+  } catch (e) {
+    setMessage(inviteMessageEl, e.message, 'error')
   }
 })
+
+copyInviteLinkBtn?.addEventListener('click', async () => {
+  await navigator.clipboard.writeText(generatedInviteLinkInput.value)
+  setMessage(inviteMessageEl, 'Copiado', 'success')
+})
+
+init()

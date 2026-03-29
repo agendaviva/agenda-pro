@@ -1,12 +1,15 @@
 import { supabase } from './supabase.js'
 
 let currentUserRole = null
+let currentUser = null
 
 function getActiveProjectId() {
   return localStorage.getItem('activeProjectId')
 }
 
 async function getUser() {
+  if (currentUser) return currentUser
+
   const { data, error } = await supabase.auth.getUser()
 
   if (error || !data.user) {
@@ -15,7 +18,8 @@ async function getUser() {
     return null
   }
 
-  return data.user
+  currentUser = data.user
+  return currentUser
 }
 
 async function loadCurrentUserRole() {
@@ -23,7 +27,10 @@ async function loadCurrentUserRole() {
   if (!user) return null
 
   const activeProjectId = getActiveProjectId()
-  if (!activeProjectId) return null
+  if (!activeProjectId) {
+    currentUserRole = null
+    return null
+  }
 
   const { data, error } = await supabase
     .from('project_members')
@@ -64,7 +71,8 @@ function renderShowCard(show) {
     </div>
   `
 
-  el.addEventListener('click', () => {
+  el.addEventListener('click', (event) => {
+    event.stopPropagation()
     if (window.openCreateShowModal) {
       window.openCreateShowModal(null, show)
     }
@@ -128,6 +136,70 @@ function updateShowInCalendar(oldShow, updatedShow) {
   if (oldCard) oldCard.replaceWith(renderShowCard(updatedShow))
 }
 
+function lockCreateButtonsForViewer() {
+  const createButtons = document.querySelectorAll(
+    '[data-open-create-show], .add-event-btn, .calendar-add-btn, .open-create-show-btn'
+  )
+
+  createButtons.forEach(btn => {
+    if (!canManageAgenda()) {
+      btn.style.display = 'none'
+    }
+  })
+}
+
+function bindDayClicks() {
+  const dayElements = document.querySelectorAll('[data-date]')
+
+  dayElements.forEach(day => {
+    day.onclick = null
+
+    day.addEventListener('click', async (event) => {
+      const clickedShow = event.target.closest('[data-show-id]')
+      if (clickedShow) return
+
+      const clickedButton = event.target.closest('button')
+      if (clickedButton) return
+
+      const date = day.dataset.date
+      if (!date) return
+
+      if (!canManageAgenda()) {
+        return
+      }
+
+      if (window.openCreateShowModal) {
+        window.openCreateShowModal(date)
+      }
+    })
+  })
+}
+
+function bindCreateButtons() {
+  const createButtons = document.querySelectorAll(
+    '[data-open-create-show], .add-event-btn, .calendar-add-btn, .open-create-show-btn'
+  )
+
+  createButtons.forEach(btn => {
+    btn.onclick = null
+
+    btn.addEventListener('click', async (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+
+      const date = btn.dataset.date || btn.getAttribute('data-date') || ''
+
+      if (!canManageAgenda()) {
+        return
+      }
+
+      if (window.openCreateShowModal) {
+        window.openCreateShowModal(date)
+      }
+    })
+  })
+}
+
 async function loadShows() {
   const user = await getUser()
   if (!user) return
@@ -176,6 +248,10 @@ async function loadShows() {
       container.appendChild(renderShowCard(show))
     })
   })
+
+  lockCreateButtonsForViewer()
+  bindDayClicks()
+  bindCreateButtons()
 }
 
 window.loadShows = loadShows
@@ -185,4 +261,5 @@ window.updateShowInCalendar = updateShowInCalendar
 window.canManageAgenda = canManageAgenda
 window.loadCurrentUserRole = loadCurrentUserRole
 
-loadShows()
+window.addEventListener('showsChanged', loadShows)
+window.addEventListener('DOMContentLoaded', loadShows)

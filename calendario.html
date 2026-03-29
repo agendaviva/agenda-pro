@@ -7,11 +7,15 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gradient-to-br from-white via-green-50 to-white text-gray-900 overflow-x-hidden">
+<body class="bg-gradient-to-br from-white via-green-50 to-white text-gray-900">
 
+  <!-- MENU -->
   <div id="menu-container"></div>
 
+  <!-- CONTEÚDO -->
   <main class="md:ml-72 min-h-screen p-6 md:p-10">
+
+    <!-- HEADER -->
     <div class="flex items-center justify-between mb-8">
       <div class="flex items-center gap-3">
         <button onclick="toggleMenu()" class="md:hidden text-3xl text-green-700">☰</button>
@@ -29,54 +33,47 @@
       </button>
     </div>
 
+    <!-- CONTROLE DE MÊS -->
     <div class="flex justify-between items-center mb-6">
-      <button
-        onclick="prevMonth()"
-        class="px-4 py-2 bg-white border rounded-xl hover:bg-gray-50 transition"
-      >
+      <button onclick="prevMonth()" class="px-4 py-2 bg-white border rounded-xl hover:bg-gray-50 transition">
         ←
       </button>
 
       <h2 id="month-title" class="text-xl font-bold capitalize"></h2>
 
-      <button
-        onclick="nextMonth()"
-        class="px-4 py-2 bg-white border rounded-xl hover:bg-gray-50 transition"
-      >
+      <button onclick="nextMonth()" class="px-4 py-2 bg-white border rounded-xl hover:bg-gray-50 transition">
         →
       </button>
     </div>
 
+    <!-- CALENDÁRIO -->
     <section id="calendar" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4"></section>
+
   </main>
 
-  <div id="create-show-modal-container"></div>
+  <!-- MODAL -->
+  <div id="create-show-modal-container" class="relative z-50"></div>
 
+  <!-- SCRIPTS -->
   <script src="assets/menu.js"></script>
-  <script type="module" src="assets/project-guard.js?v=6"></script>
-  <script type="module" src="assets/create-show-modal.js?v=6"></script>
-  <script type="module" src="assets/calendar.js?v=6"></script>
+  <script type="module" src="assets/project-guard.js?v=7"></script>
+  <script type="module" src="assets/create-show-modal.js?v=7"></script>
+  <script type="module" src="assets/calendar.js?v=7"></script>
 
+  <!-- LÓGICA DO CALENDÁRIO -->
   <script>
     let currentMonth = new Date().getMonth() + 1
     let currentYear = new Date().getFullYear()
 
-    window.getCalendarState = function () {
-      return {
-        currentMonth,
-        currentYear
-      }
-    }
-
-    function getMonthTitle() {
+    function formatMonthTitle() {
       return new Date(currentYear, currentMonth - 1, 1).toLocaleDateString('pt-BR', {
         month: 'long',
         year: 'numeric'
       })
     }
 
-    function getWeekDayLabel(dateString) {
-      return new Date(dateString + 'T12:00:00').toLocaleDateString('pt-BR', {
+    function getWeekDay(date) {
+      return new Date(date + 'T12:00:00').toLocaleDateString('pt-BR', {
         weekday: 'long'
       })
     }
@@ -89,18 +86,18 @@
       const monthPadded = String(currentMonth).padStart(2, '0')
 
       for (let i = 1; i <= totalDays; i++) {
-        const dayPadded = String(i).padStart(2, '0')
-        const date = `${currentYear}-${monthPadded}-${dayPadded}`
+        const day = String(i).padStart(2, '0')
+        const date = `${currentYear}-${monthPadded}-${day}`
 
-        const dayCard = document.createElement('div')
-        dayCard.className = 'bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col'
-        dayCard.setAttribute('data-date', date)
+        const el = document.createElement('div')
+        el.className = 'bg-white rounded-3xl border border-green-100 shadow-sm p-4 min-h-[180px] flex flex-col'
+        el.setAttribute('data-date', date)
 
-        dayCard.innerHTML = `
+        el.innerHTML = `
           <div class="flex justify-between items-start mb-3">
             <div>
-              <span class="text-xl font-bold">${dayPadded}/${monthPadded}</span>
-              <p class="text-sm text-gray-500 capitalize">${getWeekDayLabel(date)}</p>
+              <span class="text-xl font-bold">${day}/${monthPadded}</span>
+              <p class="text-sm text-gray-500 capitalize">${getWeekDay(date)}</p>
             </div>
 
             <button
@@ -112,50 +109,45 @@
           </div>
 
           <div class="events-container mt-auto">
-            <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-3 py-4 text-center text-sm text-gray-400">
+            <div class="text-sm text-gray-400 text-center">
               Sem eventos
             </div>
           </div>
         `
 
-        calendar.appendChild(dayCard)
+        calendar.appendChild(el)
       }
 
-      document.getElementById('month-title').innerText = getMonthTitle()
+      document.getElementById('month-title').innerText = formatMonthTitle()
 
-      document.dispatchEvent(new CustomEvent('calendar:rendered', {
-        detail: {
-          currentMonth,
-          currentYear
-        }
-      }))
+      // 🔥 IMPORTANTE: garante que o calendar.js escute
+      setTimeout(() => {
+        document.dispatchEvent(new CustomEvent('calendar:rendered'))
+      }, 50)
     }
 
     window.nextMonth = function () {
       currentMonth++
-
       if (currentMonth > 12) {
         currentMonth = 1
         currentYear++
       }
-
-      window.renderCalendar()
+      renderCalendar()
     }
 
     window.prevMonth = function () {
       currentMonth--
-
       if (currentMonth < 1) {
         currentMonth = 12
         currentYear--
       }
-
-      window.renderCalendar()
+      renderCalendar()
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      window.renderCalendar()
+      renderCalendar()
     })
   </script>
+
 </body>
 </html>

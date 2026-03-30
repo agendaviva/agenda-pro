@@ -2,6 +2,36 @@ import { supabase } from './supabase.js'
 
 const container = document.getElementById('create-show-modal-container')
 
+const ESTADOS_BRASIL = [
+  ['AC', 'Acre'],
+  ['AL', 'Alagoas'],
+  ['AP', 'Amapá'],
+  ['AM', 'Amazonas'],
+  ['BA', 'Bahia'],
+  ['CE', 'Ceará'],
+  ['DF', 'Distrito Federal'],
+  ['ES', 'Espírito Santo'],
+  ['GO', 'Goiás'],
+  ['MA', 'Maranhão'],
+  ['MT', 'Mato Grosso'],
+  ['MS', 'Mato Grosso do Sul'],
+  ['MG', 'Minas Gerais'],
+  ['PA', 'Pará'],
+  ['PB', 'Paraíba'],
+  ['PR', 'Paraná'],
+  ['PE', 'Pernambuco'],
+  ['PI', 'Piauí'],
+  ['RJ', 'Rio de Janeiro'],
+  ['RN', 'Rio Grande do Norte'],
+  ['RS', 'Rio Grande do Sul'],
+  ['RO', 'Rondônia'],
+  ['RR', 'Roraima'],
+  ['SC', 'Santa Catarina'],
+  ['SP', 'São Paulo'],
+  ['SE', 'Sergipe'],
+  ['TO', 'Tocantins']
+]
+
 window.openCreateShowModal = function (date = null, show = null) {
   const isEdit = !!show
 
@@ -83,20 +113,6 @@ window.openCreateShowModal = function (date = null, show = null) {
             />
           </div>
 
-          <!-- CIDADE -->
-          <div>
-            <label for="cidade" class="block text-xs font-medium text-gray-700 mb-1">
-              Cidade
-            </label>
-            <input
-              type="text"
-              id="cidade"
-              placeholder="Cidade"
-              value="${cidadeAtual}"
-              class="w-full border rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
-
           <!-- ESTADO -->
           <div>
             <label for="estado" class="block text-xs font-medium text-gray-700 mb-1">
@@ -104,22 +120,21 @@ window.openCreateShowModal = function (date = null, show = null) {
             </label>
             <select id="estado" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
               <option value="">Selecione o estado</option>
-              ${[
-                ['AC', 'Acre'], ['AL', 'Alagoas'], ['AP', 'Amapá'], ['AM', 'Amazonas'],
-                ['BA', 'Bahia'], ['CE', 'Ceará'], ['DF', 'Distrito Federal'],
-                ['ES', 'Espírito Santo'], ['GO', 'Goiás'], ['MA', 'Maranhão'],
-                ['MT', 'Mato Grosso'], ['MS', 'Mato Grosso do Sul'],
-                ['MG', 'Minas Gerais'], ['PA', 'Pará'], ['PB', 'Paraíba'],
-                ['PR', 'Paraná'], ['PE', 'Pernambuco'], ['PI', 'Piauí'],
-                ['RJ', 'Rio de Janeiro'], ['RN', 'Rio Grande do Norte'],
-                ['RS', 'Rio Grande do Sul'], ['RO', 'Rondônia'], ['RR', 'Roraima'],
-                ['SC', 'Santa Catarina'], ['SP', 'São Paulo'], ['SE', 'Sergipe'],
-                ['TO', 'Tocantins']
-              ].map(([uf, nome]) => `
+              ${ESTADOS_BRASIL.map(([uf, nome]) => `
                 <option value="${uf}" ${estadoAtual === uf ? 'selected' : ''}>
                   ${nome}
                 </option>
               `).join('')}
+            </select>
+          </div>
+
+          <!-- CIDADE -->
+          <div>
+            <label for="cidade" class="block text-xs font-medium text-gray-700 mb-1">
+              Cidade
+            </label>
+            <select id="cidade" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+              <option value="">Selecione o estado primeiro</option>
             </select>
           </div>
 
@@ -190,9 +205,57 @@ window.openCreateShowModal = function (date = null, show = null) {
   const cancelBtn = document.getElementById('cancel-btn')
   const form = document.getElementById('show-form')
   const deleteBtn = document.getElementById('delete-btn')
+  const estadoSelect = document.getElementById('estado')
+  const cidadeSelect = document.getElementById('cidade')
 
   cancelBtn.onclick = () => {
     container.innerHTML = ''
+  }
+
+  async function carregarCidades(uf, cidadeSelecionada = '') {
+    if (!uf) {
+      cidadeSelect.innerHTML = '<option value="">Selecione o estado primeiro</option>'
+      cidadeSelect.disabled = true
+      return
+    }
+
+    cidadeSelect.disabled = true
+    cidadeSelect.innerHTML = '<option value="">Carregando cidades...</option>'
+
+    try {
+      const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`)
+
+      if (!response.ok) {
+        throw new Error('Falha ao carregar cidades')
+      }
+
+      const cidades = await response.json()
+
+      cidadeSelect.innerHTML = `
+        <option value="">Selecione a cidade</option>
+        ${cidades.map((cidade) => `
+          <option value="${cidade.nome}" ${cidadeSelecionada === cidade.nome ? 'selected' : ''}>
+            ${cidade.nome}
+          </option>
+        `).join('')}
+      `
+
+      cidadeSelect.disabled = false
+    } catch (error) {
+      console.error('Erro ao carregar cidades:', error)
+      cidadeSelect.innerHTML = '<option value="">Erro ao carregar cidades</option>'
+      cidadeSelect.disabled = false
+    }
+  }
+
+  estadoSelect.addEventListener('change', () => {
+    carregarCidades(estadoSelect.value)
+  })
+
+  if (estadoAtual) {
+    carregarCidades(estadoAtual, cidadeAtual)
+  } else {
+    cidadeSelect.disabled = true
   }
 
   if (deleteBtn && isEdit) {
@@ -222,7 +285,7 @@ window.openCreateShowModal = function (date = null, show = null) {
     const data = document.getElementById('data').value
     const titulo = document.getElementById('titulo').value.trim()
     const horario = document.getElementById('horario').value
-    const cidade = document.getElementById('cidade').value.trim()
+    const cidade = document.getElementById('cidade').value
     const estado = document.getElementById('estado').value
     const contratante = document.getElementById('contratante').value.trim()
     const status = document.getElementById('status').value

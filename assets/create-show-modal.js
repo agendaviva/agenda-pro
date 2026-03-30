@@ -10,7 +10,6 @@ window.openCreateShowModal = function (date = null, show = null) {
   const tituloAtual = show?.titulo || ''
   const horarioAtual = show?.horario || ''
   const statusAtual = show?.status || 'reserva'
-  const valorAtual = show?.valor || ''
 
   container.innerHTML = `
     <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -50,7 +49,7 @@ window.openCreateShowModal = function (date = null, show = null) {
             class="w-full border rounded-xl px-4 py-3"
           />
 
-          <!-- ESTADO -->
+          <!-- ESTADO (NOVO SELECT) -->
           <select id="estado" class="w-full border rounded-xl px-4 py-3 bg-white">
             <option value="">Selecione o estado</option>
             ${[
@@ -76,17 +75,6 @@ window.openCreateShowModal = function (date = null, show = null) {
             <option value="reserva" ${statusAtual === 'reserva' ? 'selected' : ''}>Reserva</option>
             <option value="confirmado" ${statusAtual === 'confirmado' ? 'selected' : ''}>Confirmado</option>
           </select>
-
-          <!-- VALOR -->
-          <input
-            type="number"
-            id="valor"
-            placeholder="Valor do show (R$)"
-            value="${valorAtual}"
-            class="w-full border rounded-xl px-4 py-3"
-            step="0.01"
-            min="0"
-          />
 
           <!-- BOTÕES -->
           <div class="flex gap-2 mt-4">
@@ -125,7 +113,6 @@ window.openCreateShowModal = function (date = null, show = null) {
     const cidade = document.getElementById('cidade').value
     const estado = document.getElementById('estado').value
     const status = document.getElementById('status').value
-    const valor = document.getElementById('valor').value
 
     const activeProjectId = localStorage.getItem('activeProjectId')
 
@@ -142,8 +129,7 @@ window.openCreateShowModal = function (date = null, show = null) {
           horario,
           cidade,
           estado,
-          status,
-          valor: valor ? Number(valor) : null
+          status
         })
         .eq('id', show.id)
     } else {
@@ -155,7 +141,6 @@ window.openCreateShowModal = function (date = null, show = null) {
           cidade,
           estado,
           status,
-          valor: valor ? Number(valor) : null,
           data: date,
           project_id: activeProjectId
         })

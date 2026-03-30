@@ -28,6 +28,25 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;')
 }
 
+function parseLocalDate(dateValue) {
+  const normalized = normalizeDate(dateValue)
+  if (!normalized) return null
+
+  const [year, month, day] = normalized.split('-').map(Number)
+  if (!year || !month || !day) return null
+
+  return new Date(year, month - 1, day)
+}
+
+function stripTime(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+function isBetweenInclusive(targetDate, startDate, endDate) {
+  if (!targetDate) return false
+  return targetDate.getTime() >= startDate.getTime() && targetDate.getTime() <= endDate.getTime()
+}
+
 async function getUser() {
   const { data, error } = await supabase.auth.getUser()
 
@@ -112,37 +131,6 @@ function renderList(shows) {
   }).join('')
 }
 
-function updateSummary(shows) {
-  let totalConfirmado = 0
-  let totalReserva = 0
-  let qtdConfirmados = 0
-  let qtdReservas = 0
-
-  shows.forEach(show => {
-    const valor = Number(show.valor) || 0
-
-    if (show.status === 'confirmado') {
-      totalConfirmado += valor
-      qtdConfirmados += 1
-    } else {
-      totalReserva += valor
-      qtdReservas += 1
-    }
-  })
-
-  const totalGeral = totalConfirmado + totalReserva
-  const totalShows = shows.length
-  const ticketMedio = totalShows ? totalGeral / totalShows : 0
-
-  document.getElementById('totalConfirmado').innerText = formatCurrency(totalConfirmado)
-  document.getElementById('totalReserva').innerText = formatCurrency(totalReserva)
-  document.getElementById('totalGeral').innerText = formatCurrency(totalGeral)
-  document.getElementById('totalShows').innerText = String(totalShows)
-  document.getElementById('ticketMedio').innerText = formatCurrency(ticketMedio)
-  document.getElementById('qtdConfirmados').innerText = String(qtdConfirmados)
-  document.getElementById('qtdReservas').innerText = String(qtdReservas)
-}
-
 function sortShows(shows) {
   return [...shows].sort((a, b) => {
     const dateA = normalizeDate(a.data)
@@ -157,11 +145,88 @@ function sortShows(shows) {
   })
 }
 
+function calculateWindowTotals(shows) {
+  const today = stripTime(new Date())
+
+  const past30Start = new Date(today)
+  past30Start.setDate(past30Start.getDate() - 30)
+
+  const next30End = new Date(today)
+  next30End.setDate(next30End.getDate() + 30)
+
+  let ultimos30Dias = 0
+  let proximos30Dias = 0
+
+  shows.forEach(show => {
+    const showDate = parseLocalDate(show.data)
+    const valor = Number(show.valor) || 0
+
+    if (!showDate) return
+
+    if (isBetweenInclusive(showDate, past30Start, today)) {
+      ultimos30Dias += valor
+    }
+
+    if (isBetweenInclusive(showDate, today, next30End)) {
+      proximos30Dias += valor
+    }
+  })
+
+  return {
+    ultimos30Dias,
+    proximos30Dias
+  }
+}
+
+function updateSummary(filteredShows, allShows) {
+  let totalConfirmado = 0
+  let totalReserva = 0
+  let qtdConfirmados = 0
+  let qtdReservas = 0
+
+  filteredShows.forEach(show => {
+    const valor = Number(show.valor) || 0
+
+    if (show.status === 'confirmado') {
+      totalConfirmado += valor
+      qtdConfirmados += 1
+    } else {
+      totalReserva += valor
+      qtdReservas += 1
+    }
+  })
+
+  const totalGeral = totalConfirmado + totalReserva
+  const totalShows = filteredShows.length
+  const ticketMedio = totalShows ? totalGeral / totalShows : 0
+
+  const windows = calculateWindowTotals(allShows)
+
+  document.getElementById('totalConfirmado').innerText = formatCurrency(totalConfirmado)
+  document.getElementById('totalReserva').innerText = formatCurrency(totalReserva)
+  document.getElementById('totalGeral').innerText = formatCurrency(totalGeral)
+  document.getElementById('totalShows').innerText = String(totalShows)
+  document.getElementById('ticketMedio').innerText = formatCurrency(ticketMedio)
+  document.getElementById('qtdConfirmados').innerText = String(qtdConfirmados)
+  document.getElementById('qtdReservas').innerText = String(qtdReservas)
+  document.getElementById('ultimos30Dias').innerText = formatCurrency(windows.ultimos30Dias)
+  document.getElementById('proximos30Dias').innerText = formatCurrency(windows.proximos30Dias)
+}
+
 let allShows = []
 
 function applyFilters() {
   const filtroStatus = document.getElementById('filtroStatus')?.value || 'todos'
   const filtroMes = document.getElementById('filtroMes')?.value || ''
+  const filtroPeriodo = document.getElementById('filtroPeriodo')?.value || 'todos'
+
+  const today = stripTime(new Date())
+
+  const past30Start = new Date(today)
+  past30Start.setDate(past30Start.getDate() - 30)
+
+  const next30End = new Date(today)
+  next30End.setDate(next30End.getDate() + 30)
 
   let filtered = [...allShows]
 
@@ -173,8 +238,22 @@ function applyFilters() {
     filtered = filtered.filter(show => getMonthValue(show.data) === filtroMes)
   }
 
+  if (filtroPeriodo === 'ultimos30') {
+    filtered = filtered.filter(show => {
+      const showDate = parseLocalDate(show.data)
+      return isBetweenInclusive(showDate, past30Start, today)
+    })
+  }
+
+  if (filtroPeriodo === 'proximos30') {
+    filtered = filtered.filter(show => {
+      const showDate = parseLocalDate(show.data)
+      return isBetweenInclusive(showDate, today, next30End)
+    })
+  }
+
   const sorted = sortShows(filtered)
-  updateSummary(sorted)
+  updateSummary(sorted, allShows)
   renderList(sorted)
 }
 
@@ -212,13 +291,16 @@ async function loadFinance() {
 
 document.getElementById('filtroStatus')?.addEventListener('change', applyFilters)
 document.getElementById('filtroMes')?.addEventListener('change', applyFilters)
+document.getElementById('filtroPeriodo')?.addEventListener('change', applyFilters)
 
 document.getElementById('limparFiltrosBtn')?.addEventListener('click', () => {
   const filtroStatus = document.getElementById('filtroStatus')
   const filtroMes = document.getElementById('filtroMes')
+  const filtroPeriodo = document.getElementById('filtroPeriodo')
 
   if (filtroStatus) filtroStatus.value = 'todos'
   if (filtroMes) filtroMes.value = ''
+  if (filtroPeriodo) filtroPeriodo.value = 'todos'
 
   applyFilters()
 })

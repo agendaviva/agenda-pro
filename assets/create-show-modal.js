@@ -32,8 +32,34 @@ const ESTADOS_BRASIL = [
   ['TO', 'Tocantins']
 ]
 
-window.openCreateShowModal = function (date = null, show = null) {
+async function getCurrentUserRole() {
+  const activeProjectId = localStorage.getItem('activeProjectId')
+  if (!activeProjectId) return null
+
+  const { data: authData, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !authData.user) return null
+
+  const { data, error } = await supabase
+    .from('project_members')
+    .select('role')
+    .eq('project_id', activeProjectId)
+    .eq('user_id', authData.user.id)
+    .single()
+
+  if (error || !data) return null
+
+  return data.role || null
+}
+
+function canViewFinancial(role) {
+  return role === 'admin' || role === 'editor'
+}
+
+window.openCreateShowModal = async function (date = null, show = null) {
   const isEdit = !!show
+  const currentUserRole = await getCurrentUserRole()
+  const podeVerValor = canViewFinancial(currentUserRole)
 
   const dataAtual = show?.data || date || ''
   const tituloAtual = show?.titulo || ''
@@ -163,21 +189,26 @@ window.openCreateShowModal = function (date = null, show = null) {
             </select>
           </div>
 
-          <!-- VALOR -->
-          <div>
-            <label for="valor" class="block text-xs font-medium text-gray-700 mb-1">
-              Valor do show
-            </label>
-            <input
-              type="number"
-              id="valor"
-              placeholder="Valor do show (R$)"
-              value="${valorAtual}"
-              class="w-full border rounded-lg px-3 py-2 text-sm"
-              step="0.01"
-              min="0"
-            />
-          </div>
+          ${
+            podeVerValor
+              ? `
+                <div>
+                  <label for="valor" class="block text-xs font-medium text-gray-700 mb-1">
+                    Valor do show
+                  </label>
+                  <input
+                    type="number"
+                    id="valor"
+                    placeholder="Valor do show (R$)"
+                    value="${valorAtual}"
+                    class="w-full border rounded-lg px-3 py-2 text-sm"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+              `
+              : ''
+          }
 
           <!-- BOTÕES -->
           <div class="flex gap-2 pt-2">
@@ -289,9 +320,11 @@ window.openCreateShowModal = function (date = null, show = null) {
     const estado = document.getElementById('estado').value
     const contratante = document.getElementById('contratante').value.trim()
     const status = document.getElementById('status').value
-    const valorInput = document.getElementById('valor').value
 
+    const valorElement = document.getElementById('valor')
+    const valorInput = valorElement ? valorElement.value : ''
     const valor = valorInput === '' ? null : Number(valorInput)
+
     const activeProjectId = localStorage.getItem('activeProjectId')
 
     if (!activeProjectId) {
@@ -321,8 +354,11 @@ window.openCreateShowModal = function (date = null, show = null) {
       cidade,
       estado,
       contratante,
-      status,
-      valor
+      status
+    }
+
+    if (podeVerValor) {
+      payload.valor = valor
     }
 
     if (isEdit) {

@@ -9,50 +9,113 @@
 
 <body class="bg-gradient-to-br from-white via-green-50 to-white text-gray-900 overflow-x-hidden">
 
+  <!-- Menu -->
   <div id="menu-container"></div>
 
+  <!-- Conteúdo -->
   <main class="md:ml-72 min-h-screen p-6 md:p-10">
 
-    <div class="mb-8">
-      <h1 class="text-2xl md:text-3xl font-bold">Financeiro</h1>
-      <p class="text-gray-500">Resumo financeiro dos seus shows</p>
+    <div class="flex items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold">Financeiro</h1>
+        <p class="text-gray-500">Resumo financeiro dos shows da agenda ativa</p>
+      </div>
     </div>
 
-    <!-- CARDS -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-
-      <div class="bg-white rounded-2xl p-4 shadow border">
-        <p class="text-sm text-gray-500">Confirmado</p>
-        <p id="totalConfirmado" class="text-xl font-bold text-green-700">R$ 0</p>
+    <!-- Cards -->
+    <section class="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-2xl border border-green-100 shadow-sm p-4">
+        <p class="text-sm text-gray-500 mb-1">Confirmado</p>
+        <p id="totalConfirmado" class="text-xl md:text-2xl font-bold text-green-700">R$ 0,00</p>
       </div>
 
-      <div class="bg-white rounded-2xl p-4 shadow border">
-        <p class="text-sm text-gray-500">Reservas</p>
-        <p id="totalReserva" class="text-xl font-bold text-amber-600">R$ 0</p>
+      <div class="bg-white rounded-2xl border border-amber-100 shadow-sm p-4">
+        <p class="text-sm text-gray-500 mb-1">Reservas</p>
+        <p id="totalReserva" class="text-xl md:text-2xl font-bold text-amber-600">R$ 0,00</p>
       </div>
 
-      <div class="bg-white rounded-2xl p-4 shadow border">
-        <p class="text-sm text-gray-500">Total</p>
-        <p id="totalGeral" class="text-xl font-bold text-gray-900">R$ 0</p>
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <p class="text-sm text-gray-500 mb-1">Total geral</p>
+        <p id="totalGeral" class="text-xl md:text-2xl font-bold text-gray-900">R$ 0,00</p>
       </div>
 
-      <div class="bg-white rounded-2xl p-4 shadow border">
-        <p class="text-sm text-gray-500">Shows</p>
-        <p id="totalShows" class="text-xl font-bold text-gray-900">0</p>
+      <div class="bg-white rounded-2xl border border-blue-100 shadow-sm p-4">
+        <p class="text-sm text-gray-500 mb-1">Qtd. de shows</p>
+        <p id="totalShows" class="text-xl md:text-2xl font-bold text-blue-700">0</p>
+      </div>
+    </section>
+
+    <!-- Cards extras -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <p class="text-sm text-gray-500 mb-1">Ticket médio</p>
+        <p id="ticketMedio" class="text-lg md:text-xl font-bold text-gray-900">R$ 0,00</p>
       </div>
 
-    </div>
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <p class="text-sm text-gray-500 mb-1">Shows confirmados</p>
+        <p id="qtdConfirmados" class="text-lg md:text-xl font-bold text-green-700">0</p>
+      </div>
 
-    <!-- LISTA -->
-    <div class="bg-white rounded-2xl shadow border p-4">
-      <h2 class="font-semibold mb-4">Shows</h2>
-      <div id="financeList" class="space-y-2"></div>
-    </div>
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <p class="text-sm text-gray-500 mb-1">Shows em reserva</p>
+        <p id="qtdReservas" class="text-lg md:text-xl font-bold text-amber-600">0</p>
+      </div>
+    </section>
+
+    <!-- Filtro -->
+    <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-8">
+      <div class="flex flex-col md:flex-row gap-3 md:items-end">
+        <div class="w-full md:w-64">
+          <label for="filtroStatus" class="block text-sm font-medium text-gray-700 mb-1">
+            Filtrar por status
+          </label>
+          <select id="filtroStatus" class="w-full border rounded-xl px-4 py-3 bg-white">
+            <option value="todos">Todos</option>
+            <option value="confirmado">Confirmado</option>
+            <option value="reserva">Reserva</option>
+          </select>
+        </div>
+
+        <div class="w-full md:w-64">
+          <label for="filtroMes" class="block text-sm font-medium text-gray-700 mb-1">
+            Filtrar por mês
+          </label>
+          <input
+            type="month"
+            id="filtroMes"
+            class="w-full border rounded-xl px-4 py-3 bg-white"
+          />
+        </div>
+
+        <div class="w-full md:w-auto">
+          <button
+            id="limparFiltrosBtn"
+            type="button"
+            class="w-full md:w-auto px-5 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 font-medium"
+          >
+            Limpar filtros
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lista -->
+    <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="font-semibold text-lg">Shows</h2>
+          <p class="text-sm text-gray-500">Lista financeira da agenda selecionada</p>
+        </div>
+      </div>
+
+      <div id="financeList" class="space-y-3"></div>
+    </section>
 
   </main>
 
   <script type="module" src="assets/supabase.js"></script>
+  <script type="module" src="assets/menu.js"></script>
   <script type="module" src="assets/financeiro.js"></script>
-
 </body>
 </html>

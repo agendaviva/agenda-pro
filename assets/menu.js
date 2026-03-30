@@ -70,24 +70,18 @@ window.addEventListener('DOMContentLoaded', async () => {
   let activeProjectPlanExpiresAt = null
 
   if (supabase) {
-    const { data: userData, error: userError } = await supabase.auth.getUser()
+    const { data: userData } = await supabase.auth.getUser()
     user = userData?.user || null
-
-    console.log('USER ERROR:', userError)
-    console.log('USER:', user)
 
     if (user) {
       const fallbackName = user.user_metadata?.nome || ''
       const fallbackEmail = user.email || ''
 
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('id, nome, email, coins, is_admin')
         .eq('id', user.id)
         .maybeSingle()
-
-      console.log('PROFILE ERROR:', profileError)
-      console.log('PROFILE DATA:', profileData)
 
       profile = profileData || {
         nome: fallbackName,
@@ -96,7 +90,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         is_admin: false
       }
 
-      const { data: memberRows, error: memberError } = await supabase
+      const { data: memberRows } = await supabase
         .from('project_members')
         .select(`
           project_id,
@@ -108,9 +102,6 @@ window.addEventListener('DOMContentLoaded', async () => {
           )
         `)
         .eq('user_id', user.id)
-
-      console.log('PROJECT MEMBERS ERROR:', memberError)
-      console.log('PROJECT MEMBERS:', memberRows)
 
       if (memberRows && memberRows.length) {
         projects = memberRows.map(row => ({
@@ -149,9 +140,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   const coins = Number(profile?.coins ?? 0)
   const isAdmin = profile?.is_admin === true
   const planStatus = getPlanStatus(activeProjectPlanExpiresAt)
-
-  console.log('IS ADMIN FINAL:', isAdmin)
-  console.log('PROFILE IS_ADMIN RAW:', profile?.is_admin)
 
   container.innerHTML = `
     <div id="overlay" class="fixed inset-0 bg-black/40 hidden z-40 md:hidden"></div>
@@ -233,6 +221,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 
           <a href="calendario.html" class="${activeClass('calendario.html')} block px-4 py-3 rounded-2xl font-semibold">
             Calendário
+          </a>
+
+          <a href="financeiro.html" class="${activeClass('financeiro.html')} block px-4 py-3 rounded-2xl font-semibold">
+            Financeiro
           </a>
 
           <a href="equipe.html" class="${activeClass('equipe.html')} block px-4 py-3 rounded-2xl font-semibold">

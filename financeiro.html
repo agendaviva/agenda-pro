@@ -9,10 +9,8 @@
 
 <body class="bg-gradient-to-br from-white via-green-50 to-white text-gray-900 overflow-x-hidden">
 
-  <!-- Menu -->
   <div id="menu-container"></div>
 
-  <!-- Conteúdo -->
   <main class="md:ml-72 min-h-screen p-6 md:p-10">
 
     <div class="flex items-center justify-between gap-4 mb-8">
@@ -22,7 +20,7 @@
       </div>
     </div>
 
-    <!-- Cards -->
+    <!-- CARDS PRINCIPAIS -->
     <section class="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
       <div class="bg-white rounded-2xl border border-green-100 shadow-sm p-4">
         <p class="text-sm text-gray-500 mb-1">Confirmado</p>
@@ -45,28 +43,38 @@
       </div>
     </section>
 
-    <!-- Cards extras -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <!-- CARDS EXTRAS -->
+    <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 mb-8">
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <p class="text-sm text-gray-500 mb-1">Ticket médio</p>
         <p id="ticketMedio" class="text-lg md:text-xl font-bold text-gray-900">R$ 0,00</p>
       </div>
 
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <div class="bg-white rounded-2xl border border-green-100 shadow-sm p-4">
         <p class="text-sm text-gray-500 mb-1">Shows confirmados</p>
         <p id="qtdConfirmados" class="text-lg md:text-xl font-bold text-green-700">0</p>
       </div>
 
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <div class="bg-white rounded-2xl border border-amber-100 shadow-sm p-4">
         <p class="text-sm text-gray-500 mb-1">Shows em reserva</p>
         <p id="qtdReservas" class="text-lg md:text-xl font-bold text-amber-600">0</p>
       </div>
+
+      <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-4">
+        <p class="text-sm text-gray-500 mb-1">Últimos 30 dias</p>
+        <p id="ultimos30Dias" class="text-lg md:text-xl font-bold text-purple-700">R$ 0,00</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-cyan-100 shadow-sm p-4">
+        <p class="text-sm text-gray-500 mb-1">Próximos 30 dias</p>
+        <p id="proximos30Dias" class="text-lg md:text-xl font-bold text-cyan-700">R$ 0,00</p>
+      </div>
     </section>
 
-    <!-- Filtro -->
+    <!-- FILTROS -->
     <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-8">
-      <div class="flex flex-col md:flex-row gap-3 md:items-end">
-        <div class="w-full md:w-64">
+      <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-3">
+        <div>
           <label for="filtroStatus" class="block text-sm font-medium text-gray-700 mb-1">
             Filtrar por status
           </label>
@@ -77,7 +85,7 @@
           </select>
         </div>
 
-        <div class="w-full md:w-64">
+        <div>
           <label for="filtroMes" class="block text-sm font-medium text-gray-700 mb-1">
             Filtrar por mês
           </label>
@@ -88,11 +96,22 @@
           />
         </div>
 
-        <div class="w-full md:w-auto">
+        <div>
+          <label for="filtroPeriodo" class="block text-sm font-medium text-gray-700 mb-1">
+            Período rápido
+          </label>
+          <select id="filtroPeriodo" class="w-full border rounded-xl px-4 py-3 bg-white">
+            <option value="todos">Todos</option>
+            <option value="ultimos30">Últimos 30 dias</option>
+            <option value="proximos30">Próximos 30 dias</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-2 xl:col-span-2 flex items-end">
           <button
             id="limparFiltrosBtn"
             type="button"
-            class="w-full md:w-auto px-5 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 font-medium"
+            class="w-full px-5 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 font-medium"
           >
             Limpar filtros
           </button>
@@ -100,7 +119,7 @@
       </div>
     </section>
 
-    <!-- Lista -->
+    <!-- LISTA -->
     <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
       <div class="flex items-center justify-between gap-3 mb-4">
         <div>
